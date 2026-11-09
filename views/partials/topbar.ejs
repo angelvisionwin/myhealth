@@ -1,0 +1,43 @@
+<header class="navbar navbar-expand-md d-print-none">
+  <div class="container-xl">
+    <div class="d-flex align-items-center justify-content-between gap-3 w-100 py-2">
+      <div class="min-w-0">
+        <% if (Array.isArray(breadcrumbs) && breadcrumbs.length > 0) { %>
+          <nav aria-label="Migas de pan">
+            <ol class="breadcrumb breadcrumb-arrows mb-1">
+              <% breadcrumbs.forEach((crumb, index) => { %>
+                <li class="breadcrumb-item <%= index === breadcrumbs.length - 1 ? 'active' : '' %>">
+                  <% if (crumb.href && index !== breadcrumbs.length - 1) { %>
+                    <a href="<%= crumb.href %>"><%= crumb.label %></a>
+                  <% } else { %>
+                    <span><%= crumb.label %></span>
+                  <% } %>
+                </li>
+              <% }); %>
+            </ol>
+          </nav>
+        <% } %>
+
+        <h2 class="page-title mb-0 text-truncate"><%= pageTitle %></h2>
+        <% if (pageSubtitle) { %>
+          <div class="text-secondary small mt-1"><%= pageSubtitle %></div>
+        <% } %>
+      </div>
+
+      <button
+        id="theme-toggle"
+        class="btn btn-icon btn-ghost-secondary flex-shrink-0"
+        type="button"
+        aria-label="Cambiar entre tema claro y oscuro"
+        title="Cambiar tema"
+      >
+        <span class="theme-icon-light">
+          <%- include('icon', { name: 'sun', size: 20 }) %>
+        </span>
+        <span class="theme-icon-dark">
+          <%- include('icon', { name: 'moon', size: 20 }) %>
+        </span>
+      </button>
+    </div>
+  </div>
+</header>

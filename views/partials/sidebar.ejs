@@ -1,0 +1,263 @@
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+  <div class="container-fluid">
+    <a class="navbar-brand navbar-brand-autodark d-flex align-items-center gap-2" href="/dashboard">
+      <span class="brand-mark" aria-hidden="true">M</span>
+      <span class="brand-name">MyHealth</span>
+    </a>
+
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#sidebar-menu"
+      aria-controls="sidebar-menu"
+      aria-expanded="false"
+      aria-label="Alternar menú"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="sidebar-menu">
+      <ul class="navbar-nav pt-lg-3">
+        <li class="nav-item <%= activeNav === 'dashboard' ? 'active' : '' %>">
+          <a class="nav-link" href="/dashboard">
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+              <%- include('icon', { name: 'dashboard', size: 20 }) %>
+            </span>
+            <span class="nav-link-title">Dashboard</span>
+          </a>
+        </li>
+
+        <% const workoutsActive = ['workouts', 'sync', 'stats'].includes(activeNav); %>
+        <li class="nav-item <%= workoutsActive ? 'active' : '' %>">
+          <a
+            class="nav-link"
+            data-bs-toggle="collapse"
+            href="#menu-workouts"
+            role="button"
+            aria-expanded="<%= workoutsActive ? 'true' : 'false' %>"
+            aria-controls="menu-workouts"
+          >
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+              <%- include('icon', { name: 'dumbbell', size: 20 }) %>
+            </span>
+            <span class="nav-link-title">Entrenamientos</span>
+          </a>
+          <div class="collapse <%= workoutsActive ? 'show' : '' %>" id="menu-workouts">
+            <ul class="navbar-nav ps-3">
+              <li class="nav-item <%= activeNav === 'workouts' ? 'active' : '' %>">
+                <a class="nav-link" href="/workouts">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'history', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Histórico</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'stats' ? 'active' : '' %>">
+                <a class="nav-link" href="/stats">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'chart', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Estadísticas</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'sync' ? 'active' : '' %>">
+                <a class="nav-link" href="/workouts/sync">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'sync', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Sincronizar Hevy</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <% const measurementsActive = activeNav === 'measurements' || activeNav === 'measurement-new'; %>
+        <li class="nav-item <%= measurementsActive ? 'active' : '' %>">
+          <a
+            class="nav-link"
+            data-bs-toggle="collapse"
+            href="#menu-measurements"
+            role="button"
+            aria-expanded="<%= measurementsActive ? 'true' : 'false' %>"
+            aria-controls="menu-measurements"
+          >
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+              <%- include('icon', { name: 'ruler', size: 20 }) %>
+            </span>
+            <span class="nav-link-title">Mis constantes</span>
+          </a>
+          <div class="collapse <%= measurementsActive ? 'show' : '' %>" id="menu-measurements">
+            <ul class="navbar-nav ps-3">
+              <li class="nav-item <%= activeNav === 'measurements' ? 'active' : '' %>">
+                <a class="nav-link" href="/measurements">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'chart', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Evolución</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'measurement-new' ? 'active' : '' %>">
+                <a class="nav-link" href="/measurements/new">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'plus', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Nuevo registro</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <% const coachActive = ['coach', 'coach-plan', 'coach-progress', 'coach-checkin', 'coach-hiking', 'coach-photos', 'coach-profile', 'coach-exercises', 'coach-routines', 'coach-history', 'coach-report'].includes(activeNav); %>
+        <li class="nav-item <%= coachActive ? 'active' : '' %>">
+          <a
+            class="nav-link"
+            data-bs-toggle="collapse"
+            href="#menu-coach"
+            role="button"
+            aria-expanded="<%= coachActive ? 'true' : 'false' %>"
+            aria-controls="menu-coach"
+          >
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+              <%- include('icon', { name: 'coach', size: 20 }) %>
+            </span>
+            <span class="nav-link-title">Entrenador</span>
+          </a>
+          <div class="collapse <%= coachActive ? 'show' : '' %>" id="menu-coach">
+            <ul class="navbar-nav ps-3">
+              <li class="nav-item <%= activeNav === 'coach' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'coach', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Informe</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-plan' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/plan">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'calendar', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Plan semanal</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-progress' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/progress">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'trend', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Progreso</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-checkin' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/checkin">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'clipboard-check', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Check-in semanal</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-hiking' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/hiking">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'mountain', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Montaña</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-photos' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/photos">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'camera', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Fotos</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-profile' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/profile">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'target', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Perfil y objetivo</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-exercises' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/exercises">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'dumbbell', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Ajustes de ejercicios</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-routines' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/routines">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'list', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Rutinas</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-history' || activeNav === 'coach-report' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/history">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'history', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Historial</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <% const settingsActive = ['settings', 'coach-export'].includes(activeNav); %>
+        <li class="nav-item <%= settingsActive ? 'active' : '' %>">
+          <a
+            class="nav-link"
+            data-bs-toggle="collapse"
+            href="#menu-settings"
+            role="button"
+            aria-expanded="<%= settingsActive ? 'true' : 'false' %>"
+            aria-controls="menu-settings"
+          >
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+              <%- include('icon', { name: 'settings', size: 20 }) %>
+            </span>
+            <span class="nav-link-title">Configuración</span>
+          </a>
+          <div class="collapse <%= settingsActive ? 'show' : '' %>" id="menu-settings">
+            <ul class="navbar-nav ps-3">
+              <li class="nav-item <%= activeNav === 'settings' ? 'active' : '' %>">
+                <a class="nav-link" href="/settings/hevy">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'plug', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Integración Hevy</span>
+                </a>
+              </li>
+              <li class="nav-item <%= activeNav === 'coach-export' ? 'active' : '' %>">
+                <a class="nav-link" href="/coach/export">
+                  <span class="nav-link-icon">
+                    <%- include('icon', { name: 'download', size: 16 }) %>
+                  </span>
+                  <span class="nav-link-title">Datos y copias</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+
+      <div class="sidebar-note mt-auto pt-3">
+        <div class="d-flex align-items-start gap-2 text-secondary">
+          <%- include('icon', { name: 'database', size: 16 }) %>
+          <div>
+            <div class="fw-semibold">Datos locales</div>
+            <div class="small">Solo accesible desde localhost.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>

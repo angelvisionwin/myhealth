@@ -1,0 +1,85 @@
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<div class="alert alert-info" role="alert">
+  <div class="fw-semibold">¿Qué es una carga por lado?</div>
+  <p class="mb-0">
+    En máquinas unilaterales, mancuernas o ejercicios a una mano, el peso que registras es el de
+    <strong>un solo lado</strong>. Márcalo aquí para que el volumen cuente el doble y el e1RM se
+    muestre como “por lado”. No cambia las series ni los grupos musculares.
+  </p>
+</div>
+
+<form class="card" method="post" action="/coach/exercises">
+  <div class="card-header">
+    <h3 class="card-title">Ejercicios con histórico</h3>
+    <div class="card-actions">
+      <input
+        class="form-control form-control-sm"
+        id="exercise-search"
+        type="search"
+        placeholder="Buscar ejercicio…"
+        aria-label="Buscar ejercicio"
+      >
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table card-table table-vcenter" id="exercise-table">
+      <thead>
+        <tr>
+          <th class="w-1">Por lado</th>
+          <th>Ejercicio</th>
+          <th>Grupo</th>
+          <th>Equipo</th>
+          <th class="text-end">Series</th>
+          <th>Última vez</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (exercises.length === 0) { %>
+          <tr>
+            <td colspan="6" class="text-secondary">
+              Todavía no hay ejercicios con series registradas. Sincroniza con Hevy primero.
+            </td>
+          </tr>
+        <% } %>
+        <% exercises.forEach((exercise) => { %>
+          <tr data-name="<%= exercise.name.toLowerCase() %>">
+            <td>
+              <input
+                class="form-check-input"
+                type="checkbox"
+                name="unilateral"
+                value="<%= exercise.id %>"
+                aria-label="Carga por lado en <%= exercise.name %>"
+                <%= exercise.is_unilateral ? 'checked' : '' %>
+              >
+            </td>
+            <td>
+              <div class="fw-semibold"><%= exercise.name %></div>
+              <% if (['dumbbell', 'kettlebell'].includes(exercise.equipment)) { %>
+                <span class="badge bg-blue-lt mt-1">Suele ser por lado</span>
+              <% } %>
+            </td>
+            <td><%= fmt.muscleGroup(exercise.muscle_group) %></td>
+            <td><%= fmt.equipment(exercise.equipment) %></td>
+            <td class="text-end"><%= exercise.set_count %></td>
+            <td><%= fmt.date(exercise.last_used) %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <span class="text-secondary small">
+      El volumen de estos ejercicios se multiplica por dos; el e1RM sigue siendo el de un lado.
+    </span>
+    <button class="btn btn-primary" type="submit">Guardar cambios</button>
+  </div>
+</form>

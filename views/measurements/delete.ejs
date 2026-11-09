@@ -1,0 +1,38 @@
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Eliminar medida</h3>
+    <div class="card-actions">
+      <span class="badge bg-red-lt">Acción irreversible</span>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="alert alert-warning" role="alert">
+      <div class="fw-semibold mb-1">Confirma antes de borrar</div>
+      Esta acción eliminará el registro de forma permanente. No se puede deshacer.
+    </div>
+
+    <dl class="row mb-4">
+      <dt class="col-sm-3 text-secondary">Fecha</dt>
+      <dd class="col-sm-9"><%= fmt.date(measurement.measurement_date) %></dd>
+
+      <dt class="col-sm-3 text-secondary">Parámetro</dt>
+      <dd class="col-sm-9"><%= parameterLabel %></dd>
+
+      <dt class="col-sm-3 text-secondary">Valor</dt>
+      <dd class="col-sm-9">
+        <span class="fw-semibold"><%= fmt.number(measurement.value) %></span>
+        <span class="text-secondary"><%= measurement.unit %></span>
+      </dd>
+
+      <dt class="col-sm-3 text-secondary">Observaciones</dt>
+      <dd class="col-sm-9"><%= measurement.notes || '—' %></dd>
+    </dl>
+
+    <form method="post" action="/measurements/<%= measurement.id %>/delete">
+      <div class="d-flex flex-wrap justify-content-end gap-2">
+        <a class="btn btn-link" href="/measurements">Cancelar</a>
+        <button class="btn btn-danger" type="submit">Eliminar definitivamente</button>
+      </div>
+    </form>
+  </div>
+</div>

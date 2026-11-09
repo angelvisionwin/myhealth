@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#206bc4">
+    <meta name="color-scheme" content="light dark">
+    <title>Sin conexión · MyHealth</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --brand: #206bc4;
+        --bg: #f6f8fb;
+        --surface: #ffffff;
+        --text: #182433;
+        --muted: #667382;
+        --border: #e6e8eb;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #151f2c;
+          --surface: #1a2434;
+          --text: #f1f5f9;
+          --muted: #97a3b6;
+          --border: #2b3648;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: calc(1.5rem + env(safe-area-inset-top)) 1.25rem
+          calc(1.5rem + env(safe-area-inset-bottom));
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      main {
+        width: 100%;
+        max-width: 26rem;
+        padding: 2rem 1.5rem;
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        background: var(--surface);
+        text-align: center;
+        box-shadow: 0 0.75rem 2rem rgba(24, 36, 51, 0.08);
+      }
+
+      .mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 3.5rem;
+        height: 3.5rem;
+        margin-bottom: 1rem;
+        border-radius: 1rem;
+        background: var(--brand);
+        color: #fff;
+        font-size: 1.85rem;
+        font-weight: 800;
+      }
+
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.25rem;
+      }
+
+      p {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.75rem;
+        padding: 0.6rem 1.25rem;
+        border-radius: 0.6rem;
+        background: var(--brand);
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      a:active {
+        transform: scale(0.98);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">M</div>
+      <h1>Sin conexión</h1>
+      <p>
+        MyHealth necesita conexión con el servidor para mostrar tus datos. Comprueba la red y
+        vuelve a intentarlo.
+      </p>
+      <a href="/dashboard">Reintentar</a>
+    </main>
+  </body>
+</html>

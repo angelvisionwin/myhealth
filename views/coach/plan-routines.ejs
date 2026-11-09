@@ -1,0 +1,83 @@
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<% if (error) { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="fw-semibold">No se pudieron actualizar las rutinas</div>
+    <p class="mb-0"><%= error %></p>
+  </div>
+<% } %>
+
+<% if (!weeklyPlan || weeklyPlan.source !== 'hevy' || weeklyPlan.changeCount === 0) { %>
+  <div class="alert alert-info" role="alert">
+    <div class="fw-semibold">No hay cambios pendientes</div>
+    <p class="mb-0">
+      El plan actual coincide con tus rutinas de Hevy. Si el entrenador propone ajustes más
+      adelante, aparecerán aquí antes de modificar nada en Hevy.
+    </p>
+  </div>
+  <a class="btn btn-outline-secondary" href="/coach/plan">Volver al plan</a>
+<% } else { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="fw-semibold">Esta acción modifica tus rutinas en Hevy</div>
+    <p class="mb-0">
+      Se aplicarán solo los cambios que aparecen abajo. El resto de ejercicios, series, cargas y
+      notas se mantiene tal cual. Ten en cuenta que el cambio se guarda en la rutina de Hevy: si la
+      descarga es temporal, vuelve a subir las series cuando termine. Antes de escribir se refresca
+      la copia local desde Hevy para no pisar cambios recientes.
+    </p>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title">Cambios propuestos</h3>
+      <div class="card-actions text-secondary small">
+        <%= weeklyPlan.changeCount %> cambio<%= weeklyPlan.changeCount === 1 ? '' : 's' %>
+      </div>
+    </div>
+    <div class="card-body">
+      <% weeklyPlan.routineUpdates.forEach((update) => { %>
+        <div class="mb-4">
+          <div class="fw-semibold"><%= update.title %></div>
+          <% if (update.folderTitle) { %>
+            <div class="text-secondary small">Carpeta «<%= update.folderTitle %>»</div>
+          <% } %>
+          <ul class="list-unstyled mt-2 mb-0">
+            <% update.changes.forEach((change) => { %>
+              <li class="mb-1">
+                <span class="fw-semibold"><%= change.exerciseName %></span>:
+                <span class="text-secondary">
+                  <% if (change.field === 'sets') { %>
+                    <%= change.from %> → <%= change.to %> series
+                  <% } else if (change.field === 'reps') { %>
+                    <%= change.from %> → <%= change.to %> repeticiones
+                  <% } else { %>
+                    <%= fmt.number(change.from) %> kg → <%= fmt.number(change.to) %> kg
+                  <% } %>
+                </span>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+
+  <% if (!hevyConfigured) { %>
+    <div class="alert alert-warning" role="alert">
+      La API Key de Hevy no está configurada. Añade <code>HEVY_API_KEY</code> en <code>.env</code> y
+      reinicia el servidor para poder actualizar las rutinas.
+    </div>
+  <% } %>
+
+  <form method="post" action="/coach/plan/routines">
+    <button class="btn btn-warning" type="submit" <%= hevyConfigured ? '' : 'disabled' %>>
+      Actualizar rutinas en Hevy
+    </button>
+    <a class="btn btn-link" href="/coach/plan">Cancelar</a>
+  </form>
+<% } %>

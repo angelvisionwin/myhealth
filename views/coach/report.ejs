@@ -1,0 +1,333 @@
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<% if (aiError) { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="fw-semibold">No se pudo redactar con IA</div>
+    <p class="mb-0"><%= aiError %></p>
+  </div>
+<% } %>
+
+<% if (summary && summary.metrics.weeklyPlan && summary.metrics.weeklyPlan.hasChanges) { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div>
+        <div class="fw-semibold">
+          <%= summary.metrics.weeklyPlan.changeCount %> cambio<%= summary.metrics.weeklyPlan.changeCount === 1 ? '' : 's' %>
+          respecto a tus rutinas de Hevy
+        </div>
+        <p class="mb-0 small">
+          Los ejercicios ajustados están marcados en el plan. Puedes revisarlos antes de actualizar
+          nada en Hevy.
+        </p>
+      </div>
+      <a class="btn btn-warning" href="/coach/plan/routines">Revisar y actualizar en Hevy</a>
+    </div>
+  </div>
+<% } %>
+
+<div class="row row-cards">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Informe #<%= report.id %></h3>
+        <div class="card-actions">
+          <a class="btn btn-sm btn-ghost-secondary" href="/coach/history">Historial</a>
+          <form method="post" action="/coach/reports">
+            <button class="btn btn-sm btn-outline-secondary" type="submit">Generar nuevo</button>
+          </form>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if (!summary) { %>
+          <div class="alert alert-danger mb-0">
+            El contenido de este informe no se puede interpretar. Genera uno nuevo.
+          </div>
+        <% } else { %>
+          <%
+            const weight = summary.metrics.body.weight;
+            const training = summary.metrics.training;
+            const strength = summary.metrics.strength;
+            const positives = summary.findings.filter((finding) => finding.severity === 'positive');
+            const risks = summary.findings.filter(
+              (finding) => finding.severity === 'warning' || finding.severity === 'alert'
+            );
+            const observations = summary.findings.filter((finding) => finding.severity === 'info');
+          %>
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span class="badge bg-blue-lt">
+              <%= fmt.date(report.period_start) %> – <%= fmt.date(report.period_end) %>
+            </span>
+            <span class="text-secondary small">
+              Generado el <%= fmt.dateTime(report.generated_at) %> · reglas v<%= report.rules_version %>
+            </span>
+            <% if (summary.metrics.training.isResuming) { %>
+              <span class="badge bg-yellow-lt">Reanudando tras parón</span>
+            <% } %>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-sm-4">
+              <div class="card">
+                <div class="card-body py-3">
+                  <div class="subheader">Sesiones / semana</div>
+                  <div class="h2 mb-0">
+                    <%= fmt.number(
+                      training.isResuming ? training.sessionsPerWeekActive : training.sessionsPerWeek
+                    ) %>
+                  </div>
+                  <div class="text-secondary small">
+                    <%= training.isResuming ? 'en semanas activas · ' : '' %>objetivo
+                    <%= training.targetSessionsPerWeek %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="card">
+                <div class="card-body py-3">
+                  <div class="subheader">Peso</div>
+                  <div class="h2 mb-0">
+                    <%= weight.latest === null ? '—' : `${fmt.number(weight.latest)} kg` %>
+                  </div>
+                  <div class="text-secondary small">
+                    <% if (weight.trendPctPerWeek !== null) { %>
+                      <%= fmt.signedNumber(weight.trendPctPerWeek, '%/semana') %>
+                    <% } else { %>
+                      sin tendencia suficiente
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="card">
+                <div class="card-body py-3">
+                  <div class="subheader">Fuerza</div>
+                  <div class="h2 mb-0">
+                    <span class="text-green"><%= strength.improvedCount %></span>
+                    <span class="text-secondary">/</span>
+                    <span class="<%= strength.declinedCount > 0 ? 'text-red' : 'text-secondary' %>">
+                      <%= strength.declinedCount %>
+                    </span>
+                  </div>
+                  <div class="text-secondary small">suben / bajan</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <% if (positives.length > 0) { %>
+            <h4 class="mb-2">Lo que va bien</h4>
+            <% positives.forEach((finding) => { %>
+              <%- include('partials/finding-card', { finding }) %>
+            <% }); %>
+          <% } %>
+
+          <% if (risks.length > 0) { %>
+            <h4 class="mb-2 mt-3">A vigilar</h4>
+            <% risks.forEach((finding) => { %>
+              <%- include('partials/finding-card', { finding }) %>
+            <% }); %>
+          <% } %>
+
+          <% if (observations.length > 0) { %>
+            <h4 class="mb-2 mt-3">Observaciones</h4>
+            <% observations.forEach((finding) => { %>
+              <%- include('partials/finding-card', { finding }) %>
+            <% }); %>
+          <% } %>
+
+          <h4 class="mb-2 mt-3">Plan de la semana</h4>
+          <ol class="ps-3 mb-0">
+            <% summary.plan.forEach((item) => { %>
+              <li class="mb-2">
+                <span class="fw-semibold"><%= item.title %></span>
+                <span class="text-secondary small d-block"><%= item.reason %></span>
+              </li>
+            <% }); %>
+          </ol>
+
+          <% if (
+            summary.metrics.nextSession &&
+            summary.metrics.nextSession.exercises.length > 0
+          ) { %>
+            <h4 class="mb-2 mt-3">Próxima sesión sugerida</h4>
+            <p class="text-secondary small mb-2">
+              Basada en los grupos con menos volumen o más tiempo sin entrenar, usando solo
+              ejercicios de tu histórico.
+            </p>
+            <div class="list-group list-group-flush mb-2">
+              <% summary.metrics.nextSession.exercises.forEach((exercise) => { %>
+                <div class="list-group-item px-0">
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <span class="fw-semibold"><%= exercise.name %></span>
+                    <span class="badge bg-blue-lt"><%= exercise.groupLabel %></span>
+                  </div>
+                  <div class="text-secondary small">
+                    <%= exercise.sets %> series × <%= exercise.reps %> repeticiones · última carga
+                    <%= exercise.load %> · <%= fmt.date(exercise.lastDate) %>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+            <div class="text-secondary small">
+              Ajusta para terminar con 2 repeticiones en reserva. Si esta semana toca descarga, haz
+              2 series por ejercicio.
+            </div>
+          <% } %>
+
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <a class="btn btn-sm btn-outline-primary" href="/coach/plan">Ver plan semanal</a>
+          </div>
+        <% } %>
+      </div>
+      <div class="card-footer text-secondary small">
+        Este informe se basa solo en los datos registrados en MyHealth. No es un consejo médico.
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Redacción con IA</h3>
+      </div>
+      <div class="card-body">
+        <% if (!llmConfigured) { %>
+          <p class="text-secondary small mb-2">
+            Capa opcional desactivada. El informe del motor de reglas es completo y no necesita IA.
+          </p>
+          <div class="text-secondary small">
+            Para activarla, define en <code>.env</code>:
+            <code>COACH_LLM_ENABLED=true</code>, <code>COACH_LLM_API_KEY</code> y
+            <code>COACH_LLM_MODEL</code>.
+          </div>
+        <% } else { %>
+          <% if (report.ai_text) { %>
+            <div class="alert alert-info small py-2">
+              Redactado con <strong><%= report.ai_model %></strong>
+            </div>
+            <div class="notes-text small mb-3"><%= report.ai_text %></div>
+          <% } else { %>
+            <p class="text-secondary small">
+              Genera una versión redactada a partir de las métricas y hallazgos de este informe.
+            </p>
+          <% } %>
+          <form method="post" action="/coach/reports/<%= report.id %>/ai">
+            <button class="btn btn-outline-primary w-100" type="submit">
+              <%= report.ai_text ? 'Volver a redactar' : 'Redactar con IA' %>
+            </button>
+          </form>
+          <div class="text-secondary small mt-2">
+            Se envían solo métricas agregadas y hallazgos, nunca la base de datos ni identificadores.
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <% if (summary) { %>
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Perfil usado</h3>
+        </div>
+        <div class="card-body">
+          <div class="mb-2">
+            <div class="subheader">Objetivo</div>
+            <div class="fw-semibold"><%= summary.profile.goalLabel %></div>
+          </div>
+          <div class="row g-2 small">
+            <div class="col-6">
+              <div class="subheader">Edad</div>
+              <div><%= summary.profile.age ? `${summary.profile.age} años` : '—' %></div>
+            </div>
+            <div class="col-6">
+              <div class="subheader">Altura</div>
+              <div>
+                <%= summary.profile.heightCm ? `${fmt.number(summary.profile.heightCm)} cm` : '—' %>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="subheader">Sesiones/sem</div>
+              <div><%= summary.profile.targetSessionsPerWeek %></div>
+            </div>
+            <div class="col-6">
+              <div class="subheader">Peso objetivo</div>
+              <div>
+                <%= summary.profile.targetWeightKg
+                  ? `${fmt.number(summary.profile.targetWeightKg)} kg`
+                  : '—' %>
+              </div>
+            </div>
+          </div>
+          <% if (summary.profile.limitations) { %>
+            <div class="alert alert-warning mt-3 mb-0 small">
+              <span class="fw-semibold">Limitaciones:</span>
+              <%= summary.profile.limitations %>
+            </div>
+          <% } %>
+          <a class="btn btn-sm btn-outline-secondary w-100 mt-3" href="/coach/profile">
+            Revisar perfil
+          </a>
+        </div>
+      </div>
+
+      <% if (summary.metrics.hiking && summary.metrics.hiking.sessionsPeriod > 0) { %>
+        <div class="card mt-3">
+          <div class="card-header">
+            <h3 class="card-title">Montaña</h3>
+            <div class="card-actions">
+              <a class="btn btn-sm btn-ghost-secondary" href="/coach/hiking">Registrar</a>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-2 small">
+              <div class="col-6">
+                <div class="subheader">Salidas</div>
+                <div class="fw-semibold"><%= summary.metrics.hiking.sessionsPeriod %></div>
+              </div>
+              <div class="col-6">
+                <div class="subheader">Tiempo</div>
+                <div class="fw-semibold">
+                  <%= fmt.number(summary.metrics.hiking.minutesPeriod / 60) %> h
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="subheader">Desnivel</div>
+                <div class="fw-semibold">
+                  <%= fmt.number(summary.metrics.hiking.elevationPeriod) %> m
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="subheader">Última</div>
+                <div class="fw-semibold">
+                  <%= fmt.date(summary.metrics.hiking.lastSessionDate) %>
+                </div>
+              </div>
+            </div>
+            <% if (summary.metrics.hiking.bigHikeRecent) { %>
+              <div class="alert alert-info mt-3 mb-0 small">
+                Carga de montaña alta en los últimos 7 días: el plan evita añadir volumen de piernas.
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <details>
+    <summary class="card-header cursor-pointer">
+      <span class="card-title">Informe en texto (copiable)</span>
+    </summary>
+    <div class="card-body">
+      <pre class="notes-text small mb-0"><%= report.report_text %></pre>
+    </div>
+  </details>
+</div>

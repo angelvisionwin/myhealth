@@ -1,0 +1,193 @@
+<%
+  const typeStyles = {
+    strength: { label: 'Fuerza', className: 'bg-blue-lt' },
+    hiking: { label: 'Montaña', className: 'bg-green-lt' },
+    rest: { label: 'Descanso', className: 'bg-secondary-lt' }
+  };
+%>
+
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<% if (weeklyPlan.source === 'hevy') { %>
+  <div class="alert alert-info" role="alert">
+    <div class="fw-semibold">Plan basado en tus rutinas de Hevy</div>
+    <p class="mb-0">
+      <% if (weeklyPlan.routineFolderTitle) { %>
+        Carpeta «<%= weeklyPlan.routineFolderTitle %>» ·
+      <% } %>
+      <%= weeklyPlan.routineTitles.join(' · ') %>.
+      <a href="/coach/routines" class="alert-link">Ver rutinas sincronizadas</a>.
+      <% if (!weeklyPlan.hasChanges) { %>
+        <span class="d-block mt-1">Sin cambios respecto a tus rutinas originales.</span>
+      <% } %>
+    </p>
+  </div>
+<% } else { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="fw-semibold">Este plan no usa tus rutinas de Hevy</div>
+    <p class="mb-0">
+      Todavía no hay rutinas sincronizadas, así que el plan usa ejercicios de tu historial.
+      <a href="/coach/routines" class="alert-link">Sincroniza tus rutinas</a> para que siga tus
+      días reales de entrenamiento.
+    </p>
+  </div>
+<% } %>
+
+<% if (weeklyPlan.hasChanges) { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div>
+        <div class="fw-semibold">
+          <%= weeklyPlan.changeCount %> cambio<%= weeklyPlan.changeCount === 1 ? '' : 's' %>
+          respecto a tus rutinas de Hevy
+        </div>
+        <p class="mb-0 small">
+          Los ejercicios afectados están resaltados. Revisa la comparación y, si quieres, actualiza
+          tus rutinas en Hevy.
+        </p>
+      </div>
+      <a class="btn btn-warning" href="/coach/plan/routines">Revisar y actualizar en Hevy</a>
+    </div>
+  </div>
+<% } %>
+
+<div class="row row-cards mb-3">
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="subheader">Semana</div>
+        <div class="h3 mb-0"><%= fmt.date(weeklyPlan.weekStart) %> – <%= fmt.date(weeklyPlan.weekEnd) %></div>
+        <div class="text-secondary small">Plan orientativo</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="subheader">Fuerza</div>
+        <div class="h1 mb-0"><%= weeklyPlan.strengthSessions %></div>
+        <div class="text-secondary small">sesiones esta semana</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="subheader">Montaña</div>
+        <div class="h1 mb-0"><%= weeklyPlan.hikingSessions %></div>
+        <div class="text-secondary small">salidas previstas</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (weeklyPlan.deload) { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="fw-semibold">Semana de descarga</div>
+    <p class="mb-0 small">
+      El entrenador ha detectado señales de recuperación baja y fuerza en descenso. Mantén los
+      patrones, pero haz 2 series por ejercicio y cargas suaves.
+    </p>
+  </div>
+<% } %>
+
+<div class="card mb-3">
+  <div class="card-body py-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div class="small text-secondary">
+        Los días se pueden cambiar en <a href="/coach/profile">Perfil y objetivo</a>. El plan sigue
+        las rutinas de tu carpeta de Hevy y continúa la rotación por la última que hayas hecho. La
+        montaña cuenta como piernas: si ya hay una salida exigente, el plan evita acumular más
+        volumen.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row row-cards">
+  <% weeklyPlan.days.forEach((day) => { %>
+    <%
+      const typeStyle = typeStyles[day.type] || typeStyles.rest;
+      const borderClass = day.isToday ? 'border-primary' : '';
+    %>
+    <div class="col-md-6 col-xl-4">
+      <div class="card h-100 <%= borderClass %>">
+        <div class="card-header">
+          <div>
+            <div class="subheader">
+              <%= day.weekdayLabel %> · <%= fmt.date(day.date) %>
+              <% if (day.isToday) { %><span class="badge bg-primary ms-1">Hoy</span><% } %>
+            </div>
+            <h3 class="card-title mb-0"><%= day.title %></h3>
+          </div>
+          <div class="card-actions">
+            <% if ((day.exercises || []).some((exercise) => exercise.changed)) { %>
+              <span class="badge bg-yellow-lt">Cambios</span>
+            <% } %>
+            <span class="badge <%= typeStyle.className %>"><%= typeStyle.label %></span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="fw-semibold mb-2"><%= day.focus %></div>
+
+          <% if (day.routineId) { %>
+            <div class="mb-2">
+              <a class="small" href="/coach/routines/<%= day.routineId %>">
+                Ver contenido de la rutina «<%= day.title %>»
+              </a>
+            </div>
+          <% } %>
+
+          <% if (day.warmup) { %>
+            <div class="text-secondary small mb-2">
+              <span class="fw-semibold">Calentamiento:</span> <%= day.warmup %>
+            </div>
+          <% } %>
+
+          <% if (day.exercises && day.exercises.length > 0) { %>
+            <ul class="list-unstyled mb-2">
+              <% day.exercises.forEach((exercise) => { %>
+                <li class="mb-1 <%= exercise.changed ? 'p-2 rounded bg-yellow-lt' : '' %>">
+                  <div class="d-flex align-items-start justify-content-between gap-2">
+                    <div class="fw-semibold small"><%= exercise.name %></div>
+                    <% if (exercise.changed) { %>
+                      <span class="badge bg-yellow-lt">Cambiado</span>
+                    <% } %>
+                  </div>
+                  <div class="text-secondary small">
+                    <%= exercise.sets %>×<%= exercise.reps %>
+                    <% if (exercise.groupLabel) { %> · <%= exercise.groupLabel %><% } %>
+                    <% if (exercise.reference) { %> · <%= exercise.reference %><% } %>
+                  </div>
+                  <% if (exercise.changed && exercise.changeSummary) { %>
+                    <div class="small"><span class="fw-semibold">Cambio:</span> <%= exercise.changeSummary %></div>
+                  <% } %>
+                  <% if (exercise.note) { %>
+                    <div class="text-secondary small fst-italic"><%= exercise.note %></div>
+                  <% } %>
+                </li>
+              <% }); %>
+            </ul>
+          <% } %>
+
+          <% if (day.note) { %>
+            <div class="text-secondary small"><%= day.note %></div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  <% }); %>
+</div>
+
+<div class="card mt-3">
+  <div class="card-body small text-secondary">
+    <% weeklyPlan.notes.forEach((note) => { %>
+      <p class="mb-1"><%= note %></p>
+    <% }); %>
+  </div>
+</div>

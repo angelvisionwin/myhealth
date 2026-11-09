@@ -1,0 +1,33 @@
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card border-danger">
+      <div class="card-header">
+        <h3 class="card-title text-danger">Eliminar foto</h3>
+      </div>
+      <div class="card-body">
+        <p>
+          Vas a eliminar la foto del <strong><%= fmt.date(photo.photo_date) %></strong>. Esta
+          acción no se puede deshacer.
+        </p>
+        <img
+          src="/coach/photos/<%= photo.id %>/file"
+          class="rounded border mb-3"
+          alt="Foto de progreso del <%= fmt.date(photo.photo_date) %>"
+          style="max-height: 320px; max-width: 100%"
+        >
+        <% if (photo.weight_kg) { %>
+          <p class="mb-1"><span class="fw-semibold">Peso:</span> <%= fmt.number(photo.weight_kg) %> kg</p>
+        <% } %>
+        <% if (photo.notes) { %>
+          <p class="mb-0"><span class="fw-semibold">Notas:</span> <%= photo.notes %></p>
+        <% } %>
+      </div>
+      <div class="card-footer d-flex flex-wrap gap-2">
+        <form method="post" action="/coach/photos/<%= photo.id %>/delete">
+          <button class="btn btn-danger" type="submit">Eliminar definitivamente</button>
+        </form>
+        <a class="btn btn-link" href="/coach/photos">Cancelar</a>
+      </div>
+    </div>
+  </div>
+</div>

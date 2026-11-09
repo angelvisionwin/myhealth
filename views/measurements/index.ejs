@@ -1,0 +1,178 @@
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <p class="text-secondary mb-0">
+    Registra tu peso y medidas corporales, consulta su evolución y filtra el histórico.
+  </p>
+  <a class="btn btn-primary" href="/measurements/new">
+    <%- include('../partials/icon', { name: 'plus', size: 18, className: 'me-1' }) %>
+    Nuevo registro
+  </a>
+</div>
+
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<% if (filterErrors.length > 0) { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="d-flex gap-2">
+      <%- include('../partials/icon', { name: 'alert', size: 20, className: 'flex-shrink-0' }) %>
+      <div>
+        <div class="fw-semibold">Revisa los filtros</div>
+        <ul class="mb-0 ps-3">
+          <% filterErrors.forEach((error) => { %>
+            <li><%= error %></li>
+          <% }); %>
+        </ul>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<form class="card card-body mb-3" method="get" action="/measurements">
+  <div class="row g-2 align-items-end">
+    <div class="col-sm-12 col-lg-4">
+      <label class="form-label" for="filter-parameter">Parámetro</label>
+      <select class="form-select" id="filter-parameter" name="parameter">
+        <option value="">Todos los parámetros</option>
+        <% parameters.forEach((parameter) => { %>
+          <option
+            value="<%= parameter.key %>"
+            <%= filters.parameter === parameter.key ? 'selected' : '' %>
+          >
+            <%= parameter.label %> (<%= parameter.unit %>)
+          </option>
+        <% }); %>
+      </select>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <label class="form-label" for="filter-from">Desde</label>
+      <input
+        class="form-control"
+        id="filter-from"
+        type="date"
+        name="from"
+        value="<%= filters.from || '' %>"
+      >
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <label class="form-label" for="filter-to">Hasta</label>
+      <input
+        class="form-control"
+        id="filter-to"
+        type="date"
+        name="to"
+        value="<%= filters.to || '' %>"
+      >
+    </div>
+    <div class="col-sm-12 col-lg-2 d-flex gap-2">
+      <button class="btn btn-primary flex-fill" type="submit">Filtrar</button>
+      <a class="btn btn-link px-2" href="/measurements" title="Limpiar filtros">Limpiar</a>
+    </div>
+  </div>
+</form>
+
+<%
+  const hasFilters = Boolean(filters.parameter || filters.from || filters.to);
+%>
+
+<% if (total > 0) { %>
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title">Evolución de <%= chartParameter.label %></h3>
+      <div class="card-actions text-secondary small"><%= chartRangeLabel %></div>
+    </div>
+    <div class="card-body">
+      <% if (chartData) { %>
+        <div class="chart-container">
+          <canvas id="measurements-chart" aria-label="Evolución de <%= chartParameter.label %>"></canvas>
+        </div>
+        <p class="text-secondary small mt-2 mb-0">
+          Valores en <%= chartParameter.unit %>. Los filtros de fecha también se aplican al gráfico.
+        </p>
+      <% } else { %>
+        <%- include('../partials/empty-state', {
+          icon: 'scale',
+          title: 'Sin datos en el periodo',
+          text: `No hay registros de ${chartParameter.label.toLowerCase()} en el periodo seleccionado.`,
+          actionHref: `/measurements/new?parameter=${chartParameter.key}`,
+          actionLabel: 'Registrar medida'
+        }) %>
+      <% } %>
+    </div>
+  </div>
+<% } %>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <%= total %> <%= total === 1 ? 'registro' : 'registros' %>
+    </h3>
+  </div>
+
+  <% if (measurements.length > 0) { %>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Parámetro</th>
+            <th>Valor</th>
+            <th>Notas</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% measurements.forEach((measurement) => { %>
+            <tr>
+              <td class="text-nowrap text-secondary">
+                <%= fmt.date(measurement.measurement_date) %>
+              </td>
+              <td><%= measurement.parameter_label %></td>
+              <td class="text-nowrap fw-semibold">
+                <%= fmt.number(measurement.value) %> <span class="text-secondary fw-normal"><%= measurement.unit %></span>
+              </td>
+              <td>
+                <% if (measurement.notes) { %>
+                  <div class="text-truncate notes-cell" title="<%= measurement.notes %>">
+                    <%= measurement.notes %>
+                  </div>
+                <% } else { %>
+                  <span class="text-secondary">—</span>
+                <% } %>
+              </td>
+              <td class="text-end text-nowrap">
+                <a class="btn btn-sm btn-ghost-secondary" href="/measurements/<%= measurement.id %>/edit">Editar</a>
+                <a class="btn btn-sm btn-ghost-danger" href="/measurements/<%= measurement.id %>/delete">Eliminar</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('../partials/pagination', {
+      baseUrl: '/measurements',
+      queryPrefix,
+      page,
+      totalPages
+    }) %>
+  <% } else { %>
+    <div class="card-body">
+      <%- include('../partials/empty-state', {
+        icon: hasFilters ? 'alert' : 'scale',
+        title: hasFilters ? 'No hay resultados' : 'Todavía no hay medidas',
+        text: hasFilters
+          ? 'No hay registros que coincidan con los filtros seleccionados.'
+          : 'Registra tu primera medida para empezar a seguir tu evolución.',
+        actionHref: hasFilters ? '/measurements' : '/measurements/new',
+        actionLabel: hasFilters ? 'Quitar filtros' : 'Registrar primera medida'
+      }) %>
+    </div>
+  <% } %>
+</div>
+
+<% if (chartJson) { %>
+  <script type="application/json" id="measurements-chart-data"><%- chartJson %></script>
+<% } %>

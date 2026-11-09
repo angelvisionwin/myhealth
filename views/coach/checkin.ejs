@@ -1,0 +1,241 @@
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<%
+  const scoreFields = [
+    {
+      name: 'sleep_score',
+      label: 'Sueño',
+      hint: '1 = muy malo · 5 = muy bueno',
+      options: ['Muy malo', 'Malo', 'Regular', 'Bien', 'Muy bien']
+    },
+    {
+      name: 'energy_score',
+      label: 'Energía',
+      hint: '1 = agotado · 5 = con mucha energía',
+      options: ['Agotado', 'Baja', 'Normal', 'Buena', 'Muy buena']
+    },
+    {
+      name: 'stress_score',
+      label: 'Estrés',
+      hint: '1 = muy bajo · 5 = muy alto',
+      options: ['Muy bajo', 'Bajo', 'Medio', 'Alto', 'Muy alto']
+    },
+    {
+      name: 'soreness_score',
+      label: 'Agujetas',
+      hint: '1 = ninguna · 5 = muchas',
+      options: ['Ninguna', 'Leves', 'Moderadas', 'Altas', 'Muchas']
+    }
+  ];
+
+  function zoneLabels(value) {
+    try {
+      const zones = JSON.parse(value || '[]');
+      if (!Array.isArray(zones)) return '—';
+      return zones
+        .map((key) => (painZoneOptions.find((zone) => zone.key === key) || {}).label || key)
+        .join(', ') || '—';
+    } catch (error) {
+      return '—';
+    }
+  }
+%>
+
+<div class="row row-cards">
+  <div class="col-lg-7">
+    <form class="card" method="post" action="/coach/checkin">
+      <div class="card-header">
+        <h3 class="card-title">
+          <%- include('../partials/icon', { name: 'clipboard-check', size: 20, className: 'me-1' }) %>
+          <%= isEdit ? 'Editar check-in' : 'Nuevo check-in' %>
+        </h3>
+        <div class="card-actions text-secondary small">Menos de un minuto</div>
+      </div>
+      <div class="card-body">
+        <% if (errors.length > 0) { %>
+          <div class="alert alert-danger" role="alert">
+            <div class="fw-semibold">Revisa el formulario</div>
+            <ul class="mb-0 ps-3">
+              <% errors.forEach((error) => { %>
+                <li><%= error %></li>
+              <% }); %>
+            </ul>
+          </div>
+        <% } %>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label" for="checkin_date">Fecha</label>
+            <input
+              class="form-control"
+              id="checkin_date"
+              name="checkin_date"
+              type="date"
+              max="<%= today %>"
+              value="<%= form.checkin_date %>"
+              required
+            >
+            <div class="form-hint">Un check-in por fecha: si repites, se actualiza.</div>
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label" for="weight_kg">Peso (kg, opcional)</label>
+            <input
+              class="form-control"
+              id="weight_kg"
+              name="weight_kg"
+              type="number"
+              inputmode="decimal"
+              step="0.1"
+              min="20"
+              max="400"
+              value="<%= form.weight_kg %>"
+              placeholder="92,4"
+            >
+            <div class="form-hint">Si lo indicas, se guarda también en Mis constantes.</div>
+          </div>
+
+          <% scoreFields.forEach((field) => { %>
+            <div class="col-sm-6">
+              <label class="form-label" for="<%= field.name %>"><%= field.label %> (1–5)</label>
+              <select class="form-select" id="<%= field.name %>" name="<%= field.name %>">
+                <option value="">Sin valorar</option>
+                <% field.options.forEach((option, index) => { %>
+                  <option
+                    value="<%= index + 1 %>"
+                    <%= form[field.name] === String(index + 1) ? 'selected' : '' %>
+                  >
+                    <%= index + 1 %> · <%= option %>
+                  </option>
+                <% }) %>
+              </select>
+              <div class="form-hint"><%= field.hint %></div>
+            </div>
+          <% }); %>
+
+          <div class="col-12">
+            <label class="form-label">Zonas con molestia (opcional)</label>
+            <div class="d-flex flex-wrap gap-3">
+              <% painZoneOptions.forEach((zone) => { %>
+                <label class="form-check form-check-inline mb-0">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="pain_zones"
+                    value="<%= zone.key %>"
+                    <%= form.pain_zones.includes(zone.key) ? 'checked' : '' %>
+                  >
+                  <span class="form-check-label"><%= zone.label %></span>
+                </label>
+              <% }); %>
+            </div>
+            <div class="form-hint">
+              Marca solo zonas con molestia real. El entrenador adaptará el consejo y evitará
+              cargar esa zona.
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="pain_notes">Dolor o molestias: detalles (opcional)</label>
+            <textarea
+              class="form-control notes-text"
+              id="pain_notes"
+              name="pain_notes"
+              rows="2"
+              maxlength="1000"
+              placeholder="Ej. molestia en el hombro derecho al press militar"
+            ><%= form.pain_notes %></textarea>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="notes">Notas (opcional)</label>
+            <textarea
+              class="form-control notes-text"
+              id="notes"
+              name="notes"
+              rows="2"
+              maxlength="1000"
+              placeholder="Viaje, semana de mucho trabajo, cambio de horario…"
+            ><%= form.notes %></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer d-flex flex-wrap gap-2">
+        <button class="btn btn-primary" type="submit">Guardar check-in</button>
+        <a class="btn btn-link" href="/coach">Volver al entrenador</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-body">
+        <div class="fw-semibold mb-2">Para qué sirve</div>
+        <ul class="privacy-list mb-0 small">
+          <li>Detecta semanas con sueño o energía baja antes de que la fuerza caiga.</li>
+          <li>Permite recomendar una descarga en lugar de apretar más.</li>
+          <li>Registra dolor o molestias para tenerlo en cuenta en el informe.</li>
+          <li>No envía nada a ningún servicio externo.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">
+    <h3 class="card-title">Últimos check-ins</h3>
+  </div>
+  <div class="table-responsive">
+    <table class="table card-table table-vcenter">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Peso</th>
+          <th>Sueño</th>
+          <th>Energía</th>
+          <th>Estrés</th>
+          <th>Agujetas</th>
+          <th>Molestias</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (recent.length === 0) { %>
+          <tr>
+            <td colspan="8" class="text-secondary">Todavía no hay check-ins registrados.</td>
+          </tr>
+        <% } %>
+        <% recent.forEach((checkin) => { %>
+          <tr>
+            <td>
+              <%= fmt.date(checkin.checkin_date) %>
+              <% if (checkin.pain_notes) { %>
+                <span class="badge bg-yellow-lt ms-1" title="<%= checkin.pain_notes %>">Dolor</span>
+              <% } %>
+            </td>
+            <td><%= checkin.weight_kg === null ? '—' : `${fmt.number(checkin.weight_kg)} kg` %></td>
+            <td><%= checkin.sleep_score || '—' %></td>
+            <td><%= checkin.energy_score || '—' %></td>
+            <td><%= checkin.stress_score || '—' %></td>
+            <td><%= checkin.soreness_score || '—' %></td>
+            <td class="small"><%= zoneLabels(checkin.pain_zones) %></td>
+            <td class="text-end text-nowrap">
+              <a class="btn btn-sm btn-ghost-secondary" href="/coach/checkin?date=<%= checkin.checkin_date %>">
+                Editar
+              </a>
+              <a class="btn btn-sm btn-ghost-danger" href="/coach/checkin/<%= checkin.id %>/delete">
+                Eliminar
+              </a>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>

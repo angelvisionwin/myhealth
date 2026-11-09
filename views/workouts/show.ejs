@@ -1,0 +1,123 @@
+<div class="mb-3">
+  <a class="btn btn-link px-0" href="/workouts">
+    <%- include('../partials/icon', { name: 'arrow-left', size: 18, className: 'me-1' }) %>
+    Volver al histórico
+  </a>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex flex-column flex-md-row align-items-md-start justify-content-between gap-3">
+      <div>
+        <h1 class="mb-1"><%= workout.title || 'Sesión sin título' %></h1>
+        <div class="text-secondary"><%= fmt.dateTime(workout.start_time || workout.created_at) %></div>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge bg-blue-lt">
+          <%= workout.exercise_count %> <%= workout.exercise_count === 1 ? 'ejercicio' : 'ejercicios' %>
+        </span>
+        <span class="badge bg-secondary-lt">
+          <%= workout.set_count %> <%= workout.set_count === 1 ? 'serie' : 'series' %>
+        </span>
+      </div>
+    </div>
+
+    <div class="row row-cards mt-1">
+      <div class="col-sm-6 col-lg-3">
+        <div class="subheader">Inicio</div>
+        <div><%= fmt.dateTime(workout.start_time) %></div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="subheader">Fin</div>
+        <div><%= fmt.dateTime(workout.end_time) %></div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="subheader">Duración</div>
+        <div><%= fmt.duration(workout.duration_seconds) %></div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="subheader">Creada en Hevy</div>
+        <div><%= fmt.dateTime(workout.created_at) %></div>
+      </div>
+    </div>
+
+    <% if (workout.description) { %>
+      <div class="mt-3">
+        <div class="subheader">Notas de la sesión</div>
+        <p class="notes-text mb-0 text-secondary"><%= workout.description %></p>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<% if (workout.exercises.length === 0) { %>
+  <div class="card">
+    <div class="card-body">
+      <%- include('../partials/empty-state', {
+        icon: 'list',
+        title: 'Sesión sin series',
+        text: 'La sesión existe en la base de datos, pero no tiene series asociadas.',
+        actionHref: '/workouts',
+        actionLabel: 'Volver al histórico'
+      }) %>
+    </div>
+  </div>
+<% } else { %>
+  <% workout.exercises.forEach((exercise, index) => { %>
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="text-secondary me-1"><%= index + 1 %>.</span>
+          <%= exercise.name %>
+        </h3>
+        <div class="card-actions d-flex flex-wrap gap-1">
+          <% if (exercise.muscle_group) { %>
+            <span class="badge bg-azure-lt"><%= fmt.muscleGroup(exercise.muscle_group) %></span>
+          <% } %>
+          <% if (exercise.equipment) { %>
+            <span class="badge bg-secondary-lt"><%= fmt.equipment(exercise.equipment) %></span>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+          <thead>
+            <tr>
+              <th class="w-1">#</th>
+              <th>Tipo</th>
+              <th>Peso</th>
+              <th>Reps</th>
+              <th>Distancia</th>
+              <th>Duración</th>
+              <th>RPE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% exercise.sets.forEach((set) => { %>
+              <tr>
+                <td class="text-secondary">
+                  <%= set.set_index !== null && set.set_index !== undefined ? set.set_index + 1 : '—' %>
+                </td>
+                <td><%= fmt.setType(set.set_type) %></td>
+                <td>
+                  <%= set.weight_kg !== null && set.weight_kg !== undefined
+                    ? `${fmt.number(set.weight_kg)} kg`
+                    : '—' %>
+                </td>
+                <td><%= set.repetitions ?? '—' %></td>
+                <td>
+                  <%= set.distance_meters !== null && set.distance_meters !== undefined
+                    ? `${fmt.number(set.distance_meters)} m`
+                    : '—' %>
+                </td>
+                <td><%= fmt.duration(set.duration_seconds) %></td>
+                <td><%= fmt.number(set.rpe) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% }); %>
+<% } %>

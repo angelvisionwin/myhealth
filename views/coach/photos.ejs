@@ -1,0 +1,164 @@
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<div class="row row-cards">
+  <div class="col-lg-5">
+    <form class="card" id="photo-form">
+      <div class="card-header">
+        <h3 class="card-title">
+          <%- include('../partials/icon', { name: 'camera', size: 20, className: 'me-1' }) %>
+          Nueva foto
+        </h3>
+      </div>
+      <div class="card-body">
+        <noscript>
+          <div class="alert alert-warning">
+            Para subir fotos necesitas JavaScript: la imagen se comprime y se le quitan los datos
+            EXIF en el navegador antes de guardarla.
+          </div>
+        </noscript>
+
+        <div id="photo-message" class="alert alert-danger d-none" role="alert"></div>
+
+        <div class="mb-3">
+          <label class="form-label" for="photo-file">Imagen</label>
+          <input
+            class="form-control"
+            id="photo-file"
+            name="photo"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            required
+          >
+          <div class="form-hint">
+            Se reduce a un máximo de 1600 px y se guarda como JPEG. Máximo 12 MB de origen.
+          </div>
+        </div>
+
+        <div class="mb-3 d-none" id="photo-preview-wrap">
+          <img
+            id="photo-preview"
+            class="rounded border w-100"
+            alt="Vista previa de la foto"
+            style="max-height: 360px; object-fit: contain"
+          >
+        </div>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label" for="photo-date">Fecha</label>
+            <input
+              class="form-control"
+              id="photo-date"
+              name="photo_date"
+              type="date"
+              max="<%= today %>"
+              value="<%= today %>"
+              required
+            >
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="photo-weight">Peso (kg, opcional)</label>
+            <input
+              class="form-control"
+              id="photo-weight"
+              name="weight_kg"
+              type="number"
+              inputmode="decimal"
+              step="0.1"
+              min="20"
+              max="400"
+              placeholder="92,4"
+            >
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="photo-notes">Notas (opcional)</label>
+            <textarea
+              class="form-control notes-text"
+              id="photo-notes"
+              name="notes"
+              rows="2"
+              maxlength="1000"
+              placeholder="Frente, perfil, misma luz y misma postura…"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-primary" id="photo-submit" type="submit">Guardar foto</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="alert alert-info" role="alert">
+      <div class="fw-semibold">Fotos para ti, no para la báscula</div>
+      <p class="mb-0">
+        Sirven para valorar cambios de composición cuando el peso se estanca. Se guardan en
+        <code>data/photos</code>, fuera de la carpeta pública, y nunca se envían a la IA. Hazlas en
+        las mismas condiciones: misma luz, misma postura y misma hora del día.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Galería</h3>
+        <div class="card-actions text-secondary small">
+          <%= photos.length %> foto<%= photos.length === 1 ? '' : 's' %>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if (photos.length === 0) { %>
+          <div class="empty-state py-4">
+            <div class="empty-state-icon">
+              <%- include('../partials/icon', { name: 'camera', size: 32 }) %>
+            </div>
+            <h3 class="empty-state-title">Todavía no hay fotos</h3>
+            <p class="empty-state-text mb-0">
+              Una foto cada 4-6 semanas suele ser suficiente. No hace falta obsesionarse.
+            </p>
+          </div>
+        <% } else { %>
+          <div class="row g-3">
+            <% photos.forEach((photo) => { %>
+              <div class="col-6 col-md-4">
+                <div class="card h-100">
+                  <a href="/coach/photos/<%= photo.id %>/file" target="_blank" rel="noopener">
+                    <img
+                      src="/coach/photos/<%= photo.id %>/file"
+                      class="card-img-top"
+                      alt="Foto de progreso del <%= fmt.date(photo.photo_date) %>"
+                      loading="lazy"
+                      style="aspect-ratio: 3 / 4; object-fit: cover"
+                    >
+                  </a>
+                  <div class="card-body p-2">
+                    <div class="fw-semibold small"><%= fmt.date(photo.photo_date) %></div>
+                    <% if (photo.weight_kg) { %>
+                      <div class="text-secondary small"><%= fmt.number(photo.weight_kg) %> kg</div>
+                    <% } %>
+                    <% if (photo.notes) { %>
+                      <div class="text-secondary small text-truncate" title="<%= photo.notes %>">
+                        <%= photo.notes %>
+                      </div>
+                    <% } %>
+                    <a
+                      class="btn btn-sm btn-ghost-danger mt-1 px-0"
+                      href="/coach/photos/<%= photo.id %>/delete"
+                    >
+                      Eliminar
+                    </a>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>

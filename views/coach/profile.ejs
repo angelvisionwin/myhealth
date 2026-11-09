@@ -1,0 +1,363 @@
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<% if (errors.length > 0) { %>
+  <div class="alert alert-danger" role="alert">
+    <div class="d-flex gap-2">
+      <%- include('../partials/icon', { name: 'alert', size: 20, className: 'flex-shrink-0' }) %>
+      <div>
+        <div class="fw-semibold">Revisa el formulario</div>
+        <ul class="mb-0 ps-3">
+          <% errors.forEach((error) => { %>
+            <li><%= error %></li>
+          <% }); %>
+        </ul>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<form class="row row-cards" method="post" action="/coach/profile">
+  <div class="col-lg-8">
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Datos personales</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label" for="birth_year">Año de nacimiento</label>
+            <input
+              class="form-control"
+              id="birth_year"
+              name="birth_year"
+              type="number"
+              inputmode="numeric"
+              min="1900"
+              max="<%= new Date().getFullYear() - 14 %>"
+              value="<%= form.birth_year %>"
+              placeholder="1972"
+            >
+            <div class="form-hint">
+              <%= age ? `Edad actual: ${age} años.` : 'Se usa para ajustar el volumen y la recuperación.' %>
+            </div>
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label" for="height_cm">Altura (cm)</label>
+            <input
+              class="form-control"
+              id="height_cm"
+              name="height_cm"
+              type="number"
+              inputmode="decimal"
+              step="0.5"
+              min="100"
+              max="250"
+              value="<%= form.height_cm %>"
+              placeholder="175"
+            >
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label" for="sex">Sexo</label>
+            <select class="form-select" id="sex" name="sex">
+              <option value="">Sin especificar</option>
+              <% sexOptions.forEach((option) => { %>
+                <option value="<%= option.key %>" <%= form.sex === option.key ? 'selected' : '' %>>
+                  <%= option.label %>
+                </option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label" for="experience">Experiencia con el entrenamiento</label>
+            <select class="form-select" id="experience" name="experience">
+              <option value="">Sin especificar</option>
+              <% experienceLevels.forEach((option) => { %>
+                <option
+                  value="<%= option.key %>"
+                  <%= form.experience === option.key ? 'selected' : '' %>
+                >
+                  <%= option.label %>
+                </option>
+              <% }); %>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Objetivo principal</h3>
+      </div>
+      <div class="card-body">
+        <div class="d-flex flex-column gap-3">
+          <% goals.forEach((option) => { %>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="primary_goal"
+                id="goal-<%= option.key %>"
+                value="<%= option.key %>"
+                <%= form.primary_goal === option.key ? 'checked' : '' %>
+              >
+              <label class="form-check-label" for="goal-<%= option.key %>">
+                <span class="fw-semibold"><%= option.label %></span>
+                <span class="d-block text-secondary small"><%= option.description %></span>
+              </label>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Objetivos y disponibilidad</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-sm-6 col-lg-3">
+            <label class="form-label" for="target_weight_kg">Peso objetivo (kg)</label>
+            <input
+              class="form-control"
+              id="target_weight_kg"
+              name="target_weight_kg"
+              type="number"
+              inputmode="decimal"
+              step="0.1"
+              min="30"
+              max="300"
+              value="<%= form.target_weight_kg %>"
+              placeholder="82"
+            >
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <label class="form-label" for="target_waist_cm">Cintura objetivo (cm)</label>
+            <input
+              class="form-control"
+              id="target_waist_cm"
+              name="target_waist_cm"
+              type="number"
+              inputmode="decimal"
+              step="0.5"
+              min="30"
+              max="250"
+              value="<%= form.target_waist_cm %>"
+              placeholder="95"
+            >
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <label class="form-label" for="target_body_fat_pct">Grasa objetivo (%)</label>
+            <input
+              class="form-control"
+              id="target_body_fat_pct"
+              name="target_body_fat_pct"
+              type="number"
+              inputmode="decimal"
+              step="0.1"
+              min="3"
+              max="60"
+              value="<%= form.target_body_fat_pct %>"
+              placeholder="22"
+            >
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <label class="form-label" for="target_sessions_per_week">Sesiones por semana</label>
+            <input
+              class="form-control"
+              id="target_sessions_per_week"
+              name="target_sessions_per_week"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="7"
+              value="<%= form.target_sessions_per_week %>"
+              placeholder="3"
+            >
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <label class="form-label" for="session_minutes">Minutos por sesión</label>
+            <input
+              class="form-control"
+              id="session_minutes"
+              name="session_minutes"
+              type="number"
+              inputmode="numeric"
+              min="10"
+              max="240"
+              step="5"
+              value="<%= form.session_minutes %>"
+              placeholder="50"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Semana</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Días de fuerza</label>
+            <div class="d-flex flex-wrap gap-3">
+              <% weekdays.forEach((day) => { %>
+                <label class="form-check form-check-inline mb-0">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="training_days"
+                    value="<%= day.key %>"
+                    <%= form.training_days.map(String).includes(String(day.key)) ? 'checked' : '' %>
+                  >
+                  <span class="form-check-label"><%= day.short %></span>
+                </label>
+              <% }); %>
+            </div>
+            <div class="form-hint">
+              Si no marcas ninguno, el plan reparte las sesiones según tu objetivo.
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Días de montaña</label>
+            <div class="d-flex flex-wrap gap-3">
+              <% weekdays.forEach((day) => { %>
+                <label class="form-check form-check-inline mb-0">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="hiking_days"
+                    value="<%= day.key %>"
+                    <%= form.hiking_days.map(String).includes(String(day.key)) ? 'checked' : '' %>
+                  >
+                  <span class="form-check-label"><%= day.short %></span>
+                </label>
+              <% }); %>
+            </div>
+            <div class="form-hint">
+              Las salidas cuentan como carga de piernas y como recuperación. Si no marcas ningún
+              día, el plan no incluirá montaña.
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="routine_folder_id">Carpeta de rutinas de Hevy para el plan</label>
+            <select class="form-select" id="routine_folder_id" name="routine_folder_id">
+              <option value="">Automática (Musculación si existe)</option>
+              <% routineFolders.forEach((folder) => { %>
+                <option
+                  value="<%= folder.hevy_id %>"
+                  <%= String(form.routine_folder_id) === String(folder.hevy_id) ? 'selected' : '' %>
+                >
+                  <%= folder.title %>
+                </option>
+              <% }); %>
+            </select>
+            <div class="form-hint">
+              <% if (routineFolders.length > 0) { %>
+                El plan semanal usará las rutinas de esta carpeta en orden y continuará la rotación
+                por la última rutina que hayas hecho.
+              <% } else { %>
+                Todavía no hay carpetas sincronizadas. Abre <a href="/coach/routines">Rutinas de Hevy</a>
+                y pulsa «Sincronizar rutinas».
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Contexto y limitaciones</h3>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label" for="equipment">Equipamiento disponible</label>
+          <input
+            class="form-control"
+            id="equipment"
+            name="equipment"
+            type="text"
+            maxlength="300"
+            value="<%= form.equipment %>"
+            placeholder="Gimnasio completo, mancuernas en casa, barra y banco…"
+          >
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="limitations">Limitaciones o molestias</label>
+          <textarea
+            class="form-control notes-text"
+            id="limitations"
+            name="limitations"
+            rows="3"
+            maxlength="1000"
+            placeholder="Hombro derecho, rodilla, hernia, vértigos…"
+          ><%= form.limitations %></textarea>
+          <div class="form-hint">Máximo 1000 caracteres. El entrenador lo tendrá en cuenta al proponer acciones.</div>
+        </div>
+        <div>
+          <label class="form-label" for="notes">Notas para el entrenador</label>
+          <textarea
+            class="form-control notes-text"
+            id="notes"
+            name="notes"
+            rows="3"
+            maxlength="1000"
+            placeholder="Historial, medicación, preferencias, horarios…"
+          ><%= form.notes %></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button class="btn btn-primary" type="submit">Guardar perfil</button>
+      <a class="btn btn-link" href="/coach">Cancelar</a>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="empty-state-icon m-0" style="width: 2.75rem; height: 2.75rem">
+            <%- include('../partials/icon', { name: 'target', size: 22 }) %>
+          </span>
+          <div>
+            <div class="fw-semibold">Por qué estos datos</div>
+            <div class="text-secondary small">El motor de reglas los usa en cada informe.</div>
+          </div>
+        </div>
+        <ul class="privacy-list mb-0 small">
+          <li>La edad ajusta el volumen y la recuperación.</li>
+          <li>El peso y la cintura permiten valorar el ritmo de pérdida de grasa.</li>
+          <li>Las limitaciones evitan recomendaciones que no encajan contigo.</li>
+          <li>Los datos se quedan en tu SQLite local; solo salen si activas la IA opcional.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body small text-secondary">
+        <div class="fw-semibold text-body mb-1">Objetivo anti-sarcopenia</div>
+        <p class="mb-0">
+          A partir de los 50 años el objetivo prioritario es mantener fuerza y masa muscular. La
+          pérdida de grasa debe ser moderada (0,2–0,6 % del peso por semana) para no perder músculo
+          por el camino.
+        </p>
+      </div>
+    </div>
+  </div>
+</form>

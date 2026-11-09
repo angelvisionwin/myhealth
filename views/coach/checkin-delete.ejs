@@ -1,0 +1,46 @@
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card border-danger">
+      <div class="card-header">
+        <h3 class="card-title text-danger">Eliminar check-in</h3>
+      </div>
+      <div class="card-body">
+        <p>
+          Vas a eliminar el check-in del <strong><%= fmt.date(checkin.checkin_date) %></strong>.
+          Esta acción no se puede deshacer.
+        </p>
+        <dl class="row mb-0">
+          <dt class="col-5 col-sm-4">Peso</dt>
+          <dd class="col-7 col-sm-8">
+            <%= checkin.weight_kg === null ? '—' : `${fmt.number(checkin.weight_kg)} kg` %>
+          </dd>
+          <dt class="col-5 col-sm-4">Sueño / Energía</dt>
+          <dd class="col-7 col-sm-8">
+            <%= checkin.sleep_score || '—' %> / <%= checkin.energy_score || '—' %>
+          </dd>
+          <dt class="col-5 col-sm-4">Estrés / Agujetas</dt>
+          <dd class="col-7 col-sm-8">
+            <%= checkin.stress_score || '—' %> / <%= checkin.soreness_score || '—' %>
+          </dd>
+          <% if (checkin.pain_notes) { %>
+            <dt class="col-5 col-sm-4">Dolor</dt>
+            <dd class="col-7 col-sm-8"><%= checkin.pain_notes %></dd>
+          <% } %>
+          <% if (checkin.notes) { %>
+            <dt class="col-5 col-sm-4">Notas</dt>
+            <dd class="col-7 col-sm-8"><%= checkin.notes %></dd>
+          <% } %>
+        </dl>
+        <div class="alert alert-info mt-3 mb-0 small">
+          El peso que se guardó en <strong>Mis constantes</strong> desde este check-in se conserva.
+        </div>
+      </div>
+      <div class="card-footer d-flex flex-wrap gap-2">
+        <form method="post" action="/coach/checkin/<%= checkin.id %>/delete">
+          <button class="btn btn-danger" type="submit">Eliminar definitivamente</button>
+        </form>
+        <a class="btn btn-link" href="/coach/checkin">Cancelar</a>
+      </div>
+    </div>
+  </div>
+</div>

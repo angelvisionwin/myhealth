@@ -1,0 +1,256 @@
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<div class="row row-cards">
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">
+          <%- include('../partials/icon', { name: 'coach', size: 20, className: 'me-1' }) %>
+          Informe del entrenador
+        </h3>
+        <div class="card-actions">
+          <form method="post" action="/coach/reports">
+            <button class="btn btn-primary btn-sm" type="submit">
+              <%= latestReport ? 'Generar informe nuevo' : 'Generar primer informe' %>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <% if (!latestReport || !summary) { %>
+        <div class="card-body">
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <%- include('../partials/icon', { name: 'coach', size: 32 }) %>
+            </div>
+            <h3 class="empty-state-title">Todavía no hay ningún informe</h3>
+            <p class="empty-state-text">
+              <% if (totalWorkouts === 0) { %>
+                Sincroniza tus entrenamientos de Hevy y registra tu peso. El entrenador analizará
+                fuerza, volumen por grupo muscular, grasa y recuperación.
+              <% } else { %>
+                Tienes <%= totalWorkouts %> entrenamientos registrados. Genera el primer informe para
+                ver qué va bien, qué conviene vigilar y qué hacer esta semana.
+              <% } %>
+            </p>
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+              <form method="post" action="/coach/reports">
+                <button class="btn btn-primary" type="submit">Generar informe</button>
+              </form>
+              <a class="btn btn-outline-secondary" href="/coach/profile">Completar perfil</a>
+            </div>
+          </div>
+        </div>
+      <% } else { %>
+        <%
+          const positives = summary.findings.filter((finding) => finding.severity === 'positive');
+          const risks = summary.findings.filter(
+            (finding) => finding.severity === 'warning' || finding.severity === 'alert'
+          );
+          const observations = summary.findings.filter((finding) => finding.severity === 'info');
+          const weight = summary.metrics.body.weight;
+          const training = summary.metrics.training;
+          const strength = summary.metrics.strength;
+        %>
+        <div class="card-body">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span class="badge bg-blue-lt">
+              <%= fmt.date(summary.period.start) %> – <%= fmt.date(summary.period.end) %>
+            </span>
+            <span class="text-secondary small">
+              Generado el <%= fmt.dateTime(latestReport.generated_at) %>
+            </span>
+            <% if (reportStale) { %>
+              <span class="badge bg-yellow-lt">Desactualizado</span>
+            <% } %>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-sm-4">
+              <div class="card">
+                <div class="card-body py-3">
+                  <div class="subheader">Sesiones / semana</div>
+                  <div class="h2 mb-0">
+                    <%= fmt.number(
+                      training.isResuming ? training.sessionsPerWeekActive : training.sessionsPerWeek
+                    ) %>
+                  </div>
+                  <div class="text-secondary small">
+                    <%= training.isResuming ? 'en semanas activas · ' : '' %>objetivo
+                    <%= training.targetSessionsPerWeek %>
+                  </div>
+                  <% if (training.isResuming) { %>
+                    <span class="badge bg-blue-lt mt-1">Reanudando</span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="card">
+                <div class="card-body py-3">
+                  <div class="subheader">Peso actual</div>
+                  <div class="h2 mb-0">
+                    <%= weight.latest === null ? '—' : `${fmt.number(weight.latest)} kg` %>
+                  </div>
+                  <div class="text-secondary small">
+                    <% if (weight.trendPctPerWeek !== null) { %>
+                      <%= fmt.signedNumber(weight.trendPctPerWeek, '%/semana') %>
+                    <% } else { %>
+                      sin tendencia suficiente
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="card">
+                <div class="card-body py-3">
+                  <div class="subheader">Fuerza</div>
+                  <div class="h2 mb-0">
+                    <span class="text-green"><%= strength.improvedCount %></span>
+                    <span class="text-secondary">/</span>
+                    <span class="<%= strength.declinedCount > 0 ? 'text-red' : 'text-secondary' %>">
+                      <%= strength.declinedCount %>
+                    </span>
+                  </div>
+                  <div class="text-secondary small">ejercicios que suben / bajan</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <% if (positives.length > 0) { %>
+            <h4 class="mb-2">Lo que va bien</h4>
+            <% positives.slice(0, 3).forEach((finding) => { %>
+              <%- include('partials/finding-card', { finding }) %>
+            <% }); %>
+          <% } %>
+
+          <% if (risks.length > 0) { %>
+            <h4 class="mb-2 mt-3">A vigilar</h4>
+            <% risks.slice(0, 3).forEach((finding) => { %>
+              <%- include('partials/finding-card', { finding }) %>
+            <% }); %>
+          <% } %>
+
+          <% if (observations.length > 0) { %>
+            <h4 class="mb-2 mt-3">Observaciones</h4>
+            <% observations.slice(0, 2).forEach((finding) => { %>
+              <%- include('partials/finding-card', { finding }) %>
+            <% }); %>
+          <% } %>
+
+          <h4 class="mb-2 mt-3">Plan de la semana</h4>
+          <ol class="ps-3 mb-3">
+            <% summary.plan.forEach((item) => { %>
+              <li class="mb-1">
+                <span class="fw-semibold"><%= item.title %></span>
+                <span class="text-secondary small d-block"><%= item.reason %></span>
+              </li>
+            <% }); %>
+          </ol>
+
+          <a class="btn btn-outline-primary" href="/coach/reports/<%= latestReport.id %>">
+            Ver informe completo
+          </a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Tu perfil</h3>
+        <div class="card-actions">
+          <a class="btn btn-sm btn-outline-secondary" href="/coach/profile">Editar</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="mb-2">
+          <div class="subheader">Objetivo</div>
+          <div class="fw-semibold"><%= goal.label %></div>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="subheader">Edad</div>
+            <div><%= age ? `${age} años` : '—' %></div>
+          </div>
+          <div class="col-6">
+            <div class="subheader">Altura</div>
+            <div><%= profile.height_cm ? `${fmt.number(profile.height_cm)} cm` : '—' %></div>
+          </div>
+          <div class="col-6">
+            <div class="subheader">Sesiones/sem</div>
+            <div><%= profile.target_sessions_per_week || goal.defaultSessionsPerWeek %></div>
+          </div>
+          <div class="col-6">
+            <div class="subheader">Peso objetivo</div>
+            <div>
+              <%= profile.target_weight_kg ? `${fmt.number(profile.target_weight_kg)} kg` : '—' %>
+            </div>
+          </div>
+        </div>
+        <% if (profile.limitations) { %>
+          <div class="alert alert-warning mt-3 mb-0 small">
+            <span class="fw-semibold">Limitaciones:</span> <%= profile.limitations %>
+          </div>
+        <% } %>
+
+        <div class="d-grid gap-2 mt-3">
+          <a class="btn btn-sm btn-outline-primary" href="/coach/plan">Ver plan semanal</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Check-in</h3>
+        <div class="card-actions">
+          <a class="btn btn-sm btn-outline-secondary" href="/coach/checkin">Registrar</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if (!latestCheckin) { %>
+          <p class="text-secondary mb-0">
+            Aún no hay check-ins. Sin sueño, energía y molestias el consejo se basa solo en la carga.
+          </p>
+        <% } else { %>
+          <div class="fw-semibold"><%= fmt.date(latestCheckin.checkin_date) %></div>
+          <div class="text-secondary small mb-2">
+            hace <%= daysSinceCheckin %> día<%= daysSinceCheckin === 1 ? '' : 's' %>
+            <% if (daysSinceCheckin > 10) { %>
+              · <span class="text-yellow">conviene actualizarlo</span>
+            <% } %>
+          </div>
+          <div class="row g-2 small">
+            <div class="col-6">Sueño: <%= latestCheckin.sleep_score || '—' %>/5</div>
+            <div class="col-6">Energía: <%= latestCheckin.energy_score || '—' %>/5</div>
+            <div class="col-6">Estrés: <%= latestCheckin.stress_score || '—' %>/5</div>
+            <div class="col-6">Agujetas: <%= latestCheckin.soreness_score || '—' %>/5</div>
+            <div class="col-6">
+              Molestias: <%= latestPainZones.length > 0 ? latestPainZones.join(', ') : '—' %>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <a class="btn btn-outline-secondary w-100 mb-2" href="/coach/progress">
+          Ver progreso detallado
+        </a>
+        <a class="btn btn-ghost-secondary w-100 mb-2" href="/coach/hiking">
+          Registrar salida de montaña
+        </a>
+        <a class="btn btn-ghost-secondary w-100" href="/coach/history">Historial de informes</a>
+      </div>
+    </div>
+  </div>
+</div>

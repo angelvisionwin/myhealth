@@ -1,0 +1,260 @@
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<%
+  function formatMinutes(minutes) {
+    if (!minutes) return '—';
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return hours > 0 ? `${hours} h ${rest} min` : `${rest} min`;
+  }
+%>
+
+<div class="row row-cards mb-3">
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="subheader">Salidas (28 días)</div>
+        <div class="h1 mb-0"><%= summary.sessions %></div>
+        <div class="text-secondary small">registradas</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="subheader">Tiempo en montaña</div>
+        <div class="h1 mb-0"><%= fmt.number(summary.minutes / 60) %> h</div>
+        <div class="text-secondary small">en los últimos 28 días</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="subheader">Desnivel positivo</div>
+        <div class="h1 mb-0"><%= fmt.number(summary.elevation) %> m</div>
+        <div class="text-secondary small">acumulados</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row row-cards">
+  <div class="col-lg-5">
+    <form
+      class="card"
+      method="post"
+      action="<%= isEdit ? `/coach/hiking/${session.id}/edit` : '/coach/hiking' %>"
+    >
+      <div class="card-header">
+        <h3 class="card-title">
+          <%- include('../partials/icon', { name: 'trend', size: 20, className: 'me-1' }) %>
+          <%= isEdit ? 'Editar salida' : 'Nueva salida' %>
+        </h3>
+      </div>
+      <div class="card-body">
+        <% if (duplicate) { %>
+          <div class="alert alert-warning" role="alert">
+            <div class="fw-semibold">Ya existe una salida muy parecida</div>
+            <p class="mb-2 small">
+              Hay otra salida del <%= fmt.date(duplicate.session_date) %> con duración, desnivel o
+              distancia similares. Puede ser un duplicado al importar el mismo archivo.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+              <a class="btn btn-sm btn-outline-secondary" href="/coach/hiking/<%= duplicate.id %>/edit">
+                Revisar la existente
+              </a>
+              <label class="form-check mb-0">
+                <input class="form-check-input" type="checkbox" name="force" value="1">
+                <span class="form-check-label small">Guardar de todos modos</span>
+              </label>
+            </div>
+          </div>
+        <% } %>
+
+        <% if (errors.length > 0) { %>
+          <div class="alert alert-danger" role="alert">
+            <div class="fw-semibold">Revisa el formulario</div>
+            <ul class="mb-0 ps-3">
+              <% errors.forEach((error) => { %>
+                <li><%= error %></li>
+              <% }); %>
+            </ul>
+          </div>
+        <% } %>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label" for="gpx-file">Importar desde COROS (GPX o TCX)</label>
+            <input
+              class="form-control"
+              id="gpx-file"
+              type="file"
+              accept=".gpx,.tcx,application/gpx+xml,application/xml"
+            >
+            <div class="form-hint">
+              Exporta la actividad desde COROS y selecciónala: se rellenan fecha, duración,
+              desnivel y distancia. Revisa los datos antes de guardar.
+            </div>
+            <div id="gpx-message" class="small mt-2"></div>
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label" for="session_date">Fecha</label>
+            <input
+              class="form-control"
+              id="session_date"
+              name="session_date"
+              type="date"
+              max="<%= today %>"
+              value="<%= form.session_date %>"
+              required
+            >
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="duration_minutes">Duración (min)</label>
+            <input
+              class="form-control"
+              id="duration_minutes"
+              name="duration_minutes"
+              type="number"
+              inputmode="numeric"
+              min="10"
+              max="1440"
+              value="<%= form.duration_minutes %>"
+              placeholder="300"
+            >
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="elevation_gain_m">Desnivel positivo (m)</label>
+            <input
+              class="form-control"
+              id="elevation_gain_m"
+              name="elevation_gain_m"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              max="5000"
+              value="<%= form.elevation_gain_m %>"
+              placeholder="800"
+            >
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="distance_km">Distancia (km)</label>
+            <input
+              class="form-control"
+              id="distance_km"
+              name="distance_km"
+              type="number"
+              inputmode="decimal"
+              step="0.1"
+              min="0"
+              max="200"
+              value="<%= form.distance_km %>"
+              placeholder="14"
+            >
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label" for="effort_score">Esfuerzo percibido</label>
+            <select class="form-select" id="effort_score" name="effort_score">
+              <option value="">Sin valorar</option>
+              <option value="1" <%= form.effort_score === '1' ? 'selected' : '' %>>1 · Muy suave</option>
+              <option value="2" <%= form.effort_score === '2' ? 'selected' : '' %>>2 · Suave</option>
+              <option value="3" <%= form.effort_score === '3' ? 'selected' : '' %>>3 · Moderado</option>
+              <option value="4" <%= form.effort_score === '4' ? 'selected' : '' %>>4 · Duro</option>
+              <option value="5" <%= form.effort_score === '5' ? 'selected' : '' %>>5 · Muy duro</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="notes">Notas (opcional)</label>
+            <textarea
+              class="form-control notes-text"
+              id="notes"
+              name="notes"
+              rows="2"
+              maxlength="1000"
+              placeholder="Ruta, terreno, mochila, cómo terminaste…"
+            ><%= form.notes %></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer d-flex flex-wrap gap-2">
+        <button class="btn btn-primary" type="submit">
+          <%= isEdit ? 'Guardar cambios' : 'Guardar salida' %>
+        </button>
+        <% if (isEdit) { %>
+          <a class="btn btn-link" href="/coach/hiking">Cancelar</a>
+        <% } %>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card mb-3">
+      <div class="card-body small text-secondary">
+        La montaña cuenta como carga de piernas y como recuperación. El entrenador la usa para no
+        proponer volumen extra de piernas después de una salida exigente y para interpretar mejor la
+        fatiga. No se envía a Hevy ni a ningún servicio externo.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Últimas salidas</h3>
+      </div>
+      <div class="table-responsive">
+        <table class="table card-table table-vcenter">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Duración</th>
+              <th class="text-end">Desnivel</th>
+              <th class="text-end">Distancia</th>
+              <th>Esfuerzo</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (recent.length === 0) { %>
+              <tr>
+                <td colspan="6" class="text-secondary">Todavía no hay salidas registradas.</td>
+              </tr>
+            <% } %>
+            <% recent.forEach((session) => { %>
+              <tr>
+                <td><%= fmt.date(session.session_date) %></td>
+                <td><%= formatMinutes(session.duration_minutes) %></td>
+                <td class="text-end">
+                  <%= session.elevation_gain_m === null ? '—' : `${fmt.number(session.elevation_gain_m)} m` %>
+                </td>
+                <td class="text-end">
+                  <%= session.distance_km === null ? '—' : `${fmt.number(session.distance_km)} km` %>
+                </td>
+                <td><%= session.effort_score || '—' %></td>
+                <td class="text-end text-nowrap">
+                  <a
+                    class="btn btn-sm btn-ghost-secondary"
+                    href="/coach/hiking/<%= session.id %>/edit"
+                  >
+                    Editar
+                  </a>
+                  <a
+                    class="btn btn-sm btn-ghost-danger"
+                    href="/coach/hiking/<%= session.id %>/delete"
+                  >
+                    Eliminar
+                  </a>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

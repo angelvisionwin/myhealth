@@ -1,0 +1,17 @@
+<%
+  const emptyIcon = typeof icon === 'string' ? icon : 'inbox';
+  const emptyTitle = typeof title === 'string' ? title : 'Sin datos';
+  const emptyText = typeof text === 'string' ? text : '';
+  const hasAction = typeof actionHref === 'string' && actionHref.length > 0;
+  const actionText = typeof actionLabel === 'string' ? actionLabel : 'Continuar';
+%>
+<div class="empty-state">
+  <div class="empty-state-icon">
+    <%- include('icon', { name: emptyIcon, size: 32 }) %>
+  </div>
+  <h3 class="empty-state-title"><%= emptyTitle %></h3>
+  <p class="empty-state-text"><%= emptyText %></p>
+  <% if (hasAction) { %>
+    <a class="btn btn-primary" href="<%= actionHref %>"><%= actionText %></a>
+  <% } %>
+</div>

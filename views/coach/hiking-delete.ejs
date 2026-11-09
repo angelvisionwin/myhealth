@@ -1,0 +1,39 @@
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card border-danger">
+      <div class="card-header">
+        <h3 class="card-title text-danger">Eliminar salida</h3>
+      </div>
+      <div class="card-body">
+        <p>
+          Vas a eliminar la salida del <strong><%= fmt.date(session.session_date) %></strong>.
+          Esta acción no se puede deshacer.
+        </p>
+        <dl class="row mb-0">
+          <dt class="col-5 col-sm-4">Duración</dt>
+          <dd class="col-7 col-sm-8">
+            <%= session.duration_minutes === null ? '—' : `${session.duration_minutes} min` %>
+          </dd>
+          <dt class="col-5 col-sm-4">Desnivel</dt>
+          <dd class="col-7 col-sm-8">
+            <%= session.elevation_gain_m === null ? '—' : `${fmt.number(session.elevation_gain_m)} m` %>
+          </dd>
+          <dt class="col-5 col-sm-4">Distancia</dt>
+          <dd class="col-7 col-sm-8">
+            <%= session.distance_km === null ? '—' : `${fmt.number(session.distance_km)} km` %>
+          </dd>
+          <% if (session.notes) { %>
+            <dt class="col-5 col-sm-4">Notas</dt>
+            <dd class="col-7 col-sm-8"><%= session.notes %></dd>
+          <% } %>
+        </dl>
+      </div>
+      <div class="card-footer d-flex flex-wrap gap-2">
+        <form method="post" action="/coach/hiking/<%= session.id %>/delete">
+          <button class="btn btn-danger" type="submit">Eliminar definitivamente</button>
+        </form>
+        <a class="btn btn-link" href="/coach/hiking">Cancelar</a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,2 @@
+# Esta carpeta contiene la base de datos local (data/myhealth.db).
+# La carpeta se conserva en Git; el fichero .db no.

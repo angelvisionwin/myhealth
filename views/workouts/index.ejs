@@ -1,0 +1,131 @@
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <p class="text-secondary mb-0">
+    Consulta las sesiones guardadas en SQLite. Sincroniza tu histórico desde Hevy cuando quieras.
+  </p>
+  <a class="btn btn-primary" href="/workouts/sync">
+    <%- include('../partials/icon', { name: 'sync', size: 18, className: 'me-1' }) %>
+    Sincronizar Hevy
+  </a>
+</div>
+
+<% if (filterErrors.length > 0) { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="d-flex gap-2">
+      <%- include('../partials/icon', { name: 'alert', size: 20, className: 'flex-shrink-0' }) %>
+      <div>
+        <div class="fw-semibold">Revisa los filtros</div>
+        <ul class="mb-0 ps-3">
+          <% filterErrors.forEach((error) => { %>
+            <li><%= error %></li>
+          <% }); %>
+        </ul>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<form class="card card-body mb-3" method="get" action="/workouts">
+  <div class="row g-2 align-items-end">
+    <div class="col-sm-6 col-lg-3">
+      <label class="form-label" for="filter-from">Desde</label>
+      <input
+        class="form-control"
+        id="filter-from"
+        type="date"
+        name="from"
+        value="<%= filters.from || '' %>"
+      >
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <label class="form-label" for="filter-to">Hasta</label>
+      <input
+        class="form-control"
+        id="filter-to"
+        type="date"
+        name="to"
+        value="<%= filters.to || '' %>"
+      >
+    </div>
+    <div class="col-sm-12 col-lg-4">
+      <label class="form-label" for="filter-search">Buscar por nombre</label>
+      <input
+        class="form-control"
+        id="filter-search"
+        type="search"
+        name="search"
+        maxlength="100"
+        placeholder="Ej. Empuje, pierna…"
+        value="<%= filters.search %>"
+      >
+    </div>
+    <div class="col-sm-12 col-lg-2 d-flex gap-2">
+      <button class="btn btn-primary flex-fill" type="submit">Filtrar</button>
+      <a class="btn btn-link px-2" href="/workouts" title="Limpiar filtros">Limpiar</a>
+    </div>
+  </div>
+</form>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <%= total %> <%= total === 1 ? 'sesión' : 'sesiones' %>
+    </h3>
+  </div>
+
+  <% if (workouts.length > 0) { %>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Sesión</th>
+            <th>Duración</th>
+            <th class="text-end">Ejercicios</th>
+            <th class="text-end">Series</th>
+            <th class="w-1"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% workouts.forEach((workout) => { %>
+            <tr>
+              <td class="text-nowrap text-secondary">
+                <%= fmt.dateTime(workout.start_time || workout.created_at) %>
+              </td>
+              <td>
+                <a class="text-reset fw-semibold" href="/workouts/<%= workout.id %>">
+                  <%= workout.title || 'Sesión sin título' %>
+                </a>
+              </td>
+              <td class="text-nowrap"><%= fmt.duration(workout.duration_seconds) %></td>
+              <td class="text-end"><%= workout.exercise_count %></td>
+              <td class="text-end"><%= workout.set_count %></td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-ghost-secondary" href="/workouts/<%= workout.id %>">Ver</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('../partials/pagination', {
+      baseUrl: '/workouts',
+      queryPrefix,
+      page,
+      totalPages
+    }) %>
+  <% } else { %>
+    <div class="card-body">
+      <%- include('../partials/empty-state', {
+        icon: filters.from || filters.to || filters.search ? 'alert' : 'dumbbell',
+        title: filters.from || filters.to || filters.search
+          ? 'No hay resultados'
+          : 'Todavía no hay entrenamientos',
+        text: filters.from || filters.to || filters.search
+          ? 'No hay sesiones que coincidan con los filtros seleccionados.'
+          : 'La base de datos local está lista. Sincroniza tu histórico desde Hevy para empezar.',
+        actionHref: filters.from || filters.to || filters.search ? '/workouts' : '/workouts/sync',
+        actionLabel: filters.from || filters.to || filters.search ? 'Quitar filtros' : 'Sincronizar Hevy'
+      }) %>
+    </div>
+  <% } %>
+</div>

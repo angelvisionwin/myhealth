@@ -1,0 +1,129 @@
+<%
+  const selectedParameter =
+    parameters.find((parameter) => parameter.key === measurement.parameter) || parameters[0];
+%>
+
+<% if (errors.length > 0) { %>
+  <div class="alert alert-danger" role="alert">
+    <div class="d-flex gap-2">
+      <%- include('../partials/icon', { name: 'alert', size: 20, className: 'flex-shrink-0' }) %>
+      <div>
+        <div class="fw-semibold">Revisa el formulario</div>
+        <ul class="mb-0 ps-3">
+          <% errors.forEach((error) => { %>
+            <li><%= error %></li>
+          <% }); %>
+        </ul>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<% if (outlierWarning) { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="d-flex gap-2">
+      <%- include('../partials/icon', { name: 'alert', size: 20, className: 'flex-shrink-0' }) %>
+      <div>
+        <div class="fw-semibold">Valor fuera del rango orientativo</div>
+        <p class="mb-0"><%= outlierWarning %></p>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<form class="card" method="post" action="<%= formAction %>">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-sm-6 col-lg-4">
+        <label class="form-label" for="measurement-date">Fecha</label>
+        <input
+          class="form-control"
+          id="measurement-date"
+          type="date"
+          name="measurement_date"
+          value="<%= measurement.measurement_date %>"
+          required
+        >
+      </div>
+
+      <div class="col-sm-6 col-lg-4">
+        <label class="form-label" for="measurement-parameter">Parámetro</label>
+        <select class="form-select" id="measurement-parameter" name="parameter">
+          <% parameters.forEach((parameter) => { %>
+            <option
+              value="<%= parameter.key %>"
+              data-unit="<%= parameter.unit %>"
+              data-min="<%= parameter.min %>"
+              data-max="<%= parameter.max %>"
+              <%= measurement.parameter === parameter.key ? 'selected' : '' %>
+            >
+              <%= parameter.label %>
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="col-sm-6 col-lg-4">
+        <label class="form-label" for="measurement-value">Valor</label>
+        <div class="input-group">
+          <input
+            class="form-control"
+            id="measurement-value"
+            type="number"
+            name="value"
+            step="any"
+            min="0.01"
+            value="<%= measurement.value %>"
+            required
+            aria-describedby="measurement-unit"
+          >
+          <span class="input-group-text" id="measurement-unit"><%= measurement.unit || '—' %></span>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="form-hint" id="measurement-range">
+          Rango orientativo: <%= selectedParameter.min %>–<%= selectedParameter.max %>
+          <%= selectedParameter.unit %>. Un valor fuera de este rango no se bloquea: se pedirá
+          confirmación.
+        </div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label" for="measurement-notes">Observaciones <span class="text-secondary">(opcional)</span></label>
+        <textarea
+          class="form-control"
+          id="measurement-notes"
+          name="notes"
+          rows="3"
+          maxlength="1000"
+          placeholder="Ej. Medición después de entrenar, en ayunas…"
+        ><%= measurement.notes || '' %></textarea>
+        <div class="form-hint">Máximo 1000 caracteres. Se permiten varios registros en la misma fecha.</div>
+      </div>
+
+      <% if (outlierWarning) { %>
+        <div class="col-12">
+          <label class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="confirm_outlier"
+              <%= outlierConfirmed ? 'checked' : '' %>
+            >
+            <span class="form-check-label">
+              Confirmo que el valor es correcto aunque esté fuera del rango orientativo.
+            </span>
+          </label>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card-footer d-flex flex-wrap justify-content-end gap-2">
+    <a class="btn btn-link" href="/measurements">Cancelar</a>
+    <button class="btn btn-primary" type="submit">
+      <%= isEdit ? 'Guardar cambios' : 'Registrar medida' %>
+    </button>
+  </div>
+</form>

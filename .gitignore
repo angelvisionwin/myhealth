@@ -1,0 +1,27 @@
+# Dependencias
+node_modules/
+
+# Configuración y secretos
+.env
+.env.local
+
+# Base de datos local y copias
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/*.bak
+data/backups/
+data/photos/
+
+# Recursos generados desde node_modules
+public/vendor/tabler/
+public/vendor/chartjs/
+
+# Logs y temporales
+npm-debug.log*
+logs/
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db

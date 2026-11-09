@@ -1,0 +1,105 @@
+<% if (statusMessage) { %>
+  <div class="alert alert-<%= statusMessage.type %>" role="alert">
+    <div class="fw-semibold"><%= statusMessage.title %></div>
+    <p class="mb-0"><%= statusMessage.message %></p>
+  </div>
+<% } %>
+
+<% if (error) { %>
+  <div class="alert alert-warning" role="alert">
+    <div class="fw-semibold">No se pudieron sincronizar las rutinas</div>
+    <p class="mb-0"><%= error %></p>
+  </div>
+<% } %>
+
+<% const folderTitles = new Map(routineFolders.map((folder) => [folder.hevy_id, folder.title])); %>
+
+<div class="alert alert-info" role="alert">
+  <div class="fw-semibold">Solo lectura y plan semanal</div>
+  <p class="mb-0">
+    MyHealth descarga tus rutinas y carpetas para consultarlas y para construir el plan semanal.
+    Por defecto no las modifica: la única escritura es la acción explícita
+    <strong>«Revisar y actualizar en Hevy»</strong> del plan semanal. Para cambios manuales, edita la
+    rutina en Hevy y pulsa «Sincronizar rutinas»; MyHealth no incluye un editor de rutinas. La
+    sincronización funciona como espejo: las rutinas o carpetas que ya no estén en Hevy se eliminan
+    de la copia local. La carpeta que alimenta el plan se elige en
+    <a href="/coach/profile">Perfil y objetivo</a>.
+  </p>
+</div>
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <p class="text-secondary mb-0">
+    <% if (latestSync) { %>
+      Última sincronización: <%= fmt.dateTime(latestSync.started_at) %> ·
+      <%- include('../partials/status-badge', { status: latestSync.status }) %>
+      · <%= latestSync.items_read %> rutina(s)
+    <% } else { %>
+      Todavía no se han sincronizado rutinas.
+    <% } %>
+  </p>
+  <form method="post" action="/coach/routines/sync">
+    <button class="btn btn-primary" type="submit" <%= hevyConfigured ? '' : 'disabled' %>>
+      Sincronizar rutinas
+    </button>
+  </form>
+</div>
+
+<% if (!hevyConfigured) { %>
+  <div class="alert alert-warning" role="alert">
+    La API Key de Hevy no está configurada. Añade <code>HEVY_API_KEY</code> en <code>.env</code> y
+    reinicia el servidor.
+  </div>
+<% } %>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Rutinas</h3>
+    <div class="card-actions text-secondary small">
+      <%= routines.length %> rutina<%= routines.length === 1 ? '' : 's' %>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table card-table table-vcenter">
+      <thead>
+        <tr>
+          <th>Rutina</th>
+          <th class="text-end">Ejercicios</th>
+          <th class="text-end">Series</th>
+          <th>Carpeta</th>
+          <th>Sincronizada</th>
+          <th class="text-end">Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (routines.length === 0) { %>
+          <tr>
+            <td colspan="6" class="text-secondary">
+              No hay rutinas guardadas. Pulsa «Sincronizar rutinas» para descargarlas de Hevy.
+            </td>
+          </tr>
+        <% } %>
+        <% routines.forEach((routine) => { %>
+          <tr>
+            <td>
+              <a class="fw-semibold" href="/coach/routines/<%= routine.hevy_id %>">
+                <%= routine.title || 'Sin título' %>
+              </a>
+              <div class="text-secondary small">ID <%= routine.hevy_id.slice(0, 8) %>…</div>
+            </td>
+            <td class="text-end"><%= routine.exercise_count %></td>
+            <td class="text-end"><%= routine.set_count %></td>
+            <td>
+              <%= folderTitles.get(routine.folder_id) || (routine.folder_id === null ? '—' : `#${routine.folder_id}`) %>
+            </td>
+            <td><%= fmt.dateTime(routine.synced_at) %></td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-secondary" href="/coach/routines/<%= routine.hevy_id %>">
+                Ver
+              </a>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>

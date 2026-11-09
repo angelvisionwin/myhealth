@@ -1,0 +1,93 @@
+<div class="row row-cards">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">API Key de Hevy</h3>
+        <div class="card-actions">
+          <span class="badge <%= apiKeyConfigured ? 'bg-green-lt' : 'bg-yellow-lt' %>">
+            <%= apiKeyConfigured ? 'Configurada' : 'Pendiente' %>
+          </span>
+        </div>
+      </div>
+      <div class="card-body">
+        <dl class="row mb-3">
+          <dt class="col-sm-4 text-secondary">Estado</dt>
+          <dd class="col-sm-8">
+            <% if (apiKeyConfigured) { %>
+              <span class="badge bg-green-lt">Configurada</span>
+              <span class="text-secondary small ms-1">La clave nunca se muestra ni se devuelve por HTTP.</span>
+            <% } else { %>
+              <span class="badge bg-yellow-lt">No configurada</span>
+            <% } %>
+          </dd>
+
+          <dt class="col-sm-4 text-secondary">Variable</dt>
+          <dd class="col-sm-8"><code>HEVY_API_KEY</code></dd>
+
+          <dt class="col-sm-4 text-secondary">Origen</dt>
+          <dd class="col-sm-8">
+            Fichero <code>.env</code> local o variable de entorno del sistema; nunca en la base de
+            datos y excluido de Git
+          </dd>
+
+          <dt class="col-sm-4 text-secondary">Última sincronización</dt>
+          <dd class="col-sm-8">
+            <% if (lastSync) { %>
+              <%= fmt.dateTime(lastSync.started_at) %>
+              <%- include('../partials/status-badge', { status: lastSync.status }) %>
+            <% } else { %>
+              <span class="text-secondary">Nunca</span>
+            <% } %>
+          </dd>
+        </dl>
+
+        <div class="alert alert-info mb-3" role="alert">
+          La integración está activa. La sincronización se ejecuta manualmente desde
+          <a href="/workouts/sync">Entrenamientos &gt; Sincronizar Hevy</a>. Esta pantalla solo
+          comprueba si la variable de entorno está presente; no muestra ni devuelve su valor.
+        </div>
+
+        <div class="subheader">Cómo configurarla</div>
+        <ol class="roadmap-list mb-3">
+          <li>Copia <code>.env.example</code> a <code>.env</code> si aún no existe.</li>
+          <li>Asigna tu clave a <code>HEVY_API_KEY</code> en <code>.env</code>.</li>
+          <li>Reinicia el servidor para que se cargue el nuevo valor.</li>
+        </ol>
+        <p class="text-secondary small mb-3">
+          El valor se lee solo en el servidor. No se guarda en la base de datos ni se incluye en el
+          HTML de las páginas.
+        </p>
+
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-primary" href="/workouts/sync">Ir a sincronización</a>
+          <a
+            class="btn btn-outline-secondary"
+            href="https://api.hevyapp.com/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Documentación oficial
+            <%- include('../partials/icon', { name: 'external', size: 16, className: 'ms-1' }) %>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">Privacidad y seguridad</h3>
+      </div>
+      <div class="card-body">
+        <ul class="privacy-list mb-0">
+          <li>El servidor escucha solo en <code>127.0.0.1</code> por defecto.</li>
+          <li>La aplicación es personal y no tiene autenticación multiusuario.</li>
+          <li>La base de datos real está en <code>data/myhealth.db</code> y no se versiona.</li>
+          <li>Los errores se registran en consola sin mostrar la API Key.</li>
+          <li>Las consultas usan sentencias preparadas y las entradas se validan.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

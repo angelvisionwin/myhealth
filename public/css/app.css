@@ -1,0 +1,240 @@
+:root {
+  --myhealth-brand-size: 2rem;
+}
+
+body {
+  background-color: var(--tblr-bg-surface-secondary);
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--myhealth-brand-size);
+  height: var(--myhealth-brand-size);
+  border-radius: 0.65rem;
+  background: var(--tblr-primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1;
+  box-shadow: 0 0.25rem 0.75rem rgba(32, 107, 196, 0.35);
+}
+
+.brand-name {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.sidebar-note {
+  border-top: 1px solid var(--tblr-border-color);
+  margin-top: 1rem;
+  padding: 1rem 0.75rem 0.5rem;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+.theme-icon-light,
+.theme-icon-dark {
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-icon-light {
+  display: none;
+}
+
+.theme-icon-dark {
+  display: inline-flex;
+}
+
+[data-bs-theme='dark'] .theme-icon-light {
+  display: inline-flex;
+}
+
+[data-bs-theme='dark'] .theme-icon-dark {
+  display: none;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  background: var(--tblr-bg-surface-secondary);
+  color: var(--tblr-primary);
+}
+
+.empty-state-title {
+  margin-bottom: 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.empty-state-text {
+  max-width: 34rem;
+  margin-bottom: 1.25rem;
+  color: var(--tblr-secondary-color);
+}
+
+.empty-state-code {
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--tblr-primary);
+  margin-bottom: 0.5rem;
+}
+
+.notes-text {
+  white-space: pre-line;
+}
+
+pre.notes-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.notes-cell {
+  max-width: 22rem;
+}
+
+.chart-container {
+  position: relative;
+  height: 260px;
+}
+
+.roadmap-list {
+  padding-left: 1.25rem;
+  margin-bottom: 0;
+  color: var(--tblr-secondary-color);
+}
+
+.roadmap-list li {
+  margin-bottom: 0.5rem;
+}
+
+.roadmap-list li::marker {
+  color: var(--tblr-primary);
+  font-weight: 700;
+}
+
+.privacy-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.privacy-list li {
+  position: relative;
+  margin-bottom: 0.65rem;
+  padding-left: 1.1rem;
+  color: var(--tblr-secondary-color);
+}
+
+.privacy-list li::before {
+  content: '';
+  position: absolute;
+  top: 0.55em;
+  left: 0;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--tblr-primary);
+}
+
+.table-responsive .notes-cell {
+  max-width: 24rem;
+}
+
+.card-table > :not(caption) > * > * {
+  vertical-align: middle;
+}
+
+@media (max-width: 575.98px) {
+  .empty-state {
+    padding: 1.25rem 0.5rem;
+  }
+
+  .empty-state-code {
+    font-size: 3rem;
+  }
+
+  .notes-cell {
+    max-width: 14rem;
+  }
+
+  .chart-container {
+    height: 220px;
+  }
+}
+
+/* --- Aplicación instalable (PWA) y uso táctil --- */
+
+html {
+  /* Quita el destello azul al tocar enlaces y botones en móvil. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+@supports (min-height: 100dvh) {
+  /* Evita el salto de altura cuando el navegador móvil oculta la barra de URL. */
+  .page {
+    min-height: 100dvh;
+  }
+}
+
+@media (max-width: 991.98px) {
+  /* iOS amplía la página al enfocar campos con tipografía menor de 16px. */
+  .form-control,
+  .form-select,
+  .input-group > .form-control,
+  .input-group > .form-select {
+    font-size: 1rem;
+  }
+
+  .navbar-nav .nav-link,
+  .navbar-vertical .navbar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+}
+
+@media (pointer: coarse) {
+  /* Objetivo táctil mínimo recomendado (44px) en botones de icono y menú. */
+  .btn-icon,
+  .navbar-vertical .navbar-toggler {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (display-mode: standalone) {
+  /* En modo instalado el contenido se dibuja bajo la barra de estado. */
+  .navbar-vertical {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .page-body {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  }
+}

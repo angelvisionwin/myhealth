@@ -1,0 +1,162 @@
+<% if (syncResult) { %>
+  <div class="alert alert-<%= syncResult.type %>" role="alert">
+    <div class="d-flex gap-2">
+      <%- include('../partials/icon', { name: 'alert', size: 20, className: 'flex-shrink-0' }) %>
+      <div>
+        <div class="fw-semibold"><%= syncResult.title %></div>
+        <p class="mb-0"><%= syncResult.message %></p>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<div class="row row-cards">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">Integración con Hevy</h3>
+        <div class="card-actions">
+          <span class="badge <%= apiKeyConfigured ? 'bg-green-lt' : 'bg-yellow-lt' %>">
+            <%= apiKeyConfigured ? 'API Key configurada' : 'API Key pendiente' %>
+          </span>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="text-secondary">
+          La sincronización recorre todo el histórico de Hevy con la paginación oficial. Es
+          idempotente: los entrenamientos se actualizan por su identificador y las series se
+          reemplazan dentro de una transacción.
+        </p>
+
+        <dl class="row mb-3">
+          <dt class="col-sm-4 text-secondary">API Key</dt>
+          <dd class="col-sm-8">
+            <% if (apiKeyConfigured) { %>
+              <span class="badge bg-green-lt">Configurada</span>
+              <span class="text-secondary small ms-1">El valor no se muestra nunca en la interfaz.</span>
+            <% } else { %>
+              <span class="badge bg-yellow-lt">No configurada</span>
+              <a class="small ms-1" href="/settings/hevy">Ver configuración</a>
+            <% } %>
+          </dd>
+
+          <dt class="col-sm-4 text-secondary">Última sincronización</dt>
+          <dd class="col-sm-8">
+            <% if (lastSync) { %>
+              <div>
+                <%= fmt.dateTime(lastSync.started_at) %>
+                <%- include('../partials/status-badge', { status: lastSync.status }) %>
+              </div>
+              <div class="text-secondary small mt-1">
+                <%= lastSync.items_read %> leídos ·
+                <%= lastSync.items_created %> creados ·
+                <%= lastSync.items_updated %> actualizados
+              </div>
+            <% } else { %>
+              <span class="text-secondary">Nunca</span>
+            <% } %>
+          </dd>
+
+          <dt class="col-sm-4 text-secondary">Destino de los datos</dt>
+          <dd class="col-sm-8">SQLite local · <code>data/myhealth.db</code></dd>
+        </dl>
+
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <% if (apiKeyConfigured) { %>
+            <form id="hevy-sync-form" method="post" action="/workouts/sync">
+              <button id="hevy-sync-button" class="btn btn-primary" type="submit">
+                <%- include('../partials/icon', { name: 'sync', size: 18, className: 'me-1' }) %>
+                Sincronizar ahora
+              </button>
+            </form>
+          <% } else { %>
+            <a class="btn btn-primary" href="/settings/hevy">Configurar API Key</a>
+          <% } %>
+          <a class="btn btn-outline-secondary" href="/settings/hevy">Configuración</a>
+          <a
+            class="btn btn-link"
+            href="https://api.hevyapp.com/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Documentación de Hevy
+            <%- include('../partials/icon', { name: 'external', size: 16, className: 'ms-1' }) %>
+          </a>
+        </div>
+
+        <p class="text-secondary small mt-2 mb-0">
+          La operación puede tardar unos segundos si el histórico es grande. Si falla, los datos ya
+          importados se conservan y puedes reintentar sin duplicar.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">Qué hace la sincronización</h3>
+      </div>
+      <div class="card-body">
+        <ol class="roadmap-list">
+          <li>Comprueba la autenticación con la API real.</li>
+          <li>Recorre todas las páginas de entrenamientos (máximo 10 por página).</li>
+          <li>Guarda sesiones, ejercicios y series en SQLite dentro de transacciones.</li>
+          <li>Actualiza los registros existentes mediante identificador de Hevy.</li>
+          <li>Registra el resultado y los contadores en el historial.</li>
+        </ol>
+        <p class="text-secondary small mb-0">
+          En esta fase no se eliminan entrenamientos locales si desaparecen de Hevy. No se usan
+          endpoints privados ni se simulan respuestas como datos reales.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">
+    <h3 class="card-title">Historial de sincronizaciones</h3>
+  </div>
+
+  <% if (recentSyncs.length > 0) { %>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Estado</th>
+            <th class="text-end">Leídos</th>
+            <th class="text-end">Creados</th>
+            <th class="text-end">Actualizados</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentSyncs.forEach((sync) => { %>
+            <tr>
+              <td class="text-nowrap text-secondary"><%= fmt.dateTime(sync.started_at) %></td>
+              <td class="text-nowrap text-secondary"><%= fmt.dateTime(sync.finished_at) %></td>
+              <td><%- include('../partials/status-badge', { status: sync.status }) %></td>
+              <td class="text-end"><%= sync.items_read %></td>
+              <td class="text-end"><%= sync.items_created %></td>
+              <td class="text-end"><%= sync.items_updated %></td>
+              <td class="text-danger small"><%= sync.error_message || '—' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <div class="card-body">
+      <%- include('../partials/empty-state', {
+        icon: 'sync',
+        title: 'Aún no hay sincronizaciones',
+        text: 'Pulsa «Sincronizar ahora» para importar tu histórico de Hevy.',
+        actionHref: '/settings/hevy',
+        actionLabel: 'Revisar configuración'
+      }) %>
+    </div>
+  <% } %>
+</div>

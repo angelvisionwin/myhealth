@@ -1,0 +1,284 @@
+<% if (!hasAnyData) { %>
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+        <div class="empty-state-icon flex-shrink-0">
+          <%- include('../partials/icon', { name: 'chart', size: 32 }) %>
+        </div>
+        <div class="flex-fill">
+          <h3 class="mb-1">Tu resumen empezará a tomar forma</h3>
+          <p class="text-secondary mb-3">
+            Todavía no hay entrenamientos ni medidas. Sincroniza tu histórico de Hevy o registra tu
+            primera medida corporal.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-primary" href="/workouts/sync">Sincronizar Hevy</a>
+            <a class="btn btn-outline-secondary" href="/measurements/new">Registrar medida</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<% if (coachHighlight) { %>
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+        <div class="empty-state-icon flex-shrink-0 m-0">
+          <%- include('../partials/icon', { name: 'coach', size: 30 }) %>
+        </div>
+        <div class="flex-fill min-w-0">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+            <span class="subheader mb-0">Entrenador · <%= fmt.date(coachHighlight.generatedAt) %></span>
+            <span class="badge <%= fmt.findingSeverity(coachHighlight.severity).className %>">
+              <%= fmt.findingSeverity(coachHighlight.severity).label %>
+            </span>
+            <% if (coachHighlight.stale) { %>
+              <span class="badge bg-yellow-lt">Desactualizado</span>
+            <% } %>
+          </div>
+          <div class="h3 mb-1"><%= coachHighlight.title %></div>
+          <div class="text-secondary"><%= coachHighlight.detail %></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 flex-shrink-0">
+          <a class="btn btn-outline-secondary" href="/coach">Ver informe</a>
+          <form method="post" action="/coach/reports">
+            <button class="btn btn-primary" type="submit">Nuevo informe</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else if (hasWorkouts) { %>
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+        <div class="empty-state-icon flex-shrink-0 m-0">
+          <%- include('../partials/icon', { name: 'coach', size: 30 }) %>
+        </div>
+        <div class="flex-fill">
+          <h3 class="mb-1">Tu entrenador está listo</h3>
+          <p class="text-secondary mb-0">
+            Genera el primer informe para ver qué va bien, qué conviene vigilar y qué hacer esta
+            semana con tus entrenamientos y medidas.
+          </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 flex-shrink-0">
+          <a class="btn btn-outline-secondary" href="/coach/profile">Completar perfil</a>
+          <form method="post" action="/coach/reports">
+            <button class="btn btn-primary" type="submit">Generar informe</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<div class="row row-deck row-cards mb-3">
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="subheader">Última sincronización</div>
+          <span class="text-secondary">
+            <%- include('../partials/icon', { name: 'sync', size: 18 }) %>
+          </span>
+        </div>
+        <% if (lastSync) { %>
+          <div class="h3 mb-1"><%= fmt.dateTime(lastSync.started_at) %></div>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <%- include('../partials/status-badge', { status: lastSync.status }) %>
+            <span class="text-secondary small">
+              <%= lastSync.items_created %>
+              <%= lastSync.items_created === 1 ? 'creado' : 'creados' %> ·
+              <%= lastSync.items_updated %>
+              <%= lastSync.items_updated === 1 ? 'actualizado' : 'actualizados' %>
+            </span>
+          </div>
+        <% } else { %>
+          <div class="h3 mb-1 text-secondary">Pendiente</div>
+          <p class="text-secondary small mb-2">Nunca se ha ejecutado una sincronización.</p>
+          <a class="link-primary small" href="/workouts/sync">Ver estado</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="subheader">Entrenamientos este mes</div>
+          <span class="text-secondary">
+            <%- include('../partials/icon', { name: 'dumbbell', size: 18 }) %>
+          </span>
+        </div>
+        <% if (monthly.workout_count > 0) { %>
+          <div class="h1 mb-0"><%= monthly.workout_count %></div>
+          <div class="text-secondary small">
+            <%= monthly.workout_count === 1 ? 'sesión registrada' : 'sesiones registradas' %>
+          </div>
+        <% } else { %>
+          <div class="h3 mb-1 text-secondary">Sin datos</div>
+          <p class="text-secondary small mb-2">Aún no hay sesiones este mes.</p>
+          <a class="link-primary small" href="/workouts">Ver histórico</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="subheader">Tiempo entrenado este mes</div>
+          <span class="text-secondary">
+            <%- include('../partials/icon', { name: 'history', size: 18 }) %>
+          </span>
+        </div>
+        <% if (monthly.duration_seconds > 0) { %>
+          <div class="h2 mb-0"><%= fmt.duration(monthly.duration_seconds) %></div>
+          <div class="text-secondary small">según la duración registrada por Hevy</div>
+        <% } else { %>
+          <div class="h3 mb-1 text-secondary">Sin datos</div>
+          <p class="text-secondary small mb-0">
+            <%= monthly.workout_count > 0
+              ? 'Las sesiones de este mes no tienen duración registrada.'
+              : 'Todavía no hay sesiones este mes.' %>
+          </p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="subheader">Último peso</div>
+          <span class="text-secondary">
+            <%- include('../partials/icon', { name: 'scale', size: 18 }) %>
+          </span>
+        </div>
+        <% if (latestWeight) { %>
+          <div class="h1 mb-0">
+            <%= fmt.number(latestWeight.value) %>
+            <span class="h4 text-secondary"><%= latestWeight.unit %></span>
+          </div>
+          <div class="text-secondary small"><%= fmt.date(latestWeight.measurement_date) %></div>
+          <div class="small mt-1">
+            <% if (weightDifference === null) { %>
+              <span class="text-secondary">Primer registro</span>
+            <% } else if (weightDifference === 0) { %>
+              <span class="text-secondary">Sin cambios respecto al registro anterior</span>
+            <% } else { %>
+              <span class="text-secondary">
+                <%= fmt.signedNumber(weightDifference, latestWeight.unit) %> respecto al registro anterior
+              </span>
+            <% } %>
+          </div>
+        <% } else { %>
+          <div class="h3 mb-1 text-secondary">Sin registros</div>
+          <p class="text-secondary small mb-2">Todavía no hay un peso registrado.</p>
+          <a class="link-primary small" href="/measurements/new">Ver parámetros disponibles</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row row-cards">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">Entrenamientos recientes</h3>
+        <div class="card-actions">
+          <a class="btn btn-sm btn-ghost-secondary" href="/workouts">Ver histórico</a>
+        </div>
+      </div>
+
+      <% if (recentWorkouts.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Sesión</th>
+                <th>Duración</th>
+                <th class="text-end">Series</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recentWorkouts.forEach((workout) => { %>
+                <tr>
+                  <td class="text-nowrap text-secondary">
+                    <%= fmt.dateTime(workout.start_time || workout.created_at) %>
+                  </td>
+                  <td>
+                    <a class="text-reset" href="/workouts/<%= workout.id %>">
+                      <%= workout.title || 'Sesión sin título' %>
+                    </a>
+                  </td>
+                  <td class="text-nowrap"><%= fmt.duration(workout.duration_seconds) %></td>
+                  <td class="text-end"><%= workout.set_count %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="card-body">
+          <%- include('../partials/empty-state', {
+            icon: 'dumbbell',
+            title: 'Sin entrenamientos',
+            text: 'Cuando sincronices tu histórico de Hevy, las sesiones aparecerán aquí.',
+            actionHref: '/workouts/sync',
+            actionLabel: 'Sincronizar Hevy'
+          }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">Evolución del peso</h3>
+        <div class="card-actions">
+          <a class="btn btn-sm btn-ghost-secondary" href="/measurements">Mis constantes</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if (latestWeight) { %>
+          <div class="d-flex align-items-end gap-2 mb-1">
+            <div class="h1 mb-0"><%= fmt.number(latestWeight.value) %></div>
+            <div class="h4 text-secondary mb-1"><%= latestWeight.unit %></div>
+          </div>
+          <p class="text-secondary small mb-2">
+            Último registro: <%= fmt.date(latestWeight.measurement_date) %>.
+            <% if (weightChartData) { %>Últimos 90 días.<% } else { %>Sin registros en los últimos 90 días.<% } %>
+          </p>
+          <% if (weightChartData) { %>
+            <div class="chart-container">
+              <canvas id="dashboard-weight-chart" aria-label="Evolución del peso en los últimos 90 días"></canvas>
+            </div>
+          <% } %>
+          <a class="btn btn-outline-secondary btn-sm mt-2" href="/measurements">Ver evolución</a>
+        <% } else { %>
+          <%- include('../partials/empty-state', {
+            icon: 'scale',
+            title: 'Sin medidas registradas',
+            text: 'Cuando registres tu peso, aquí verás su evolución en los últimos 90 días.',
+            actionHref: '/measurements/new',
+            actionLabel: 'Registrar primera medida'
+          }) %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (weightChartJson) { %>
+  <script type="application/json" id="dashboard-weight-data"><%- weightChartJson %></script>
+<% } %>

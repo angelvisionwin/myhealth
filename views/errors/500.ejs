@@ -1,0 +1,13 @@
+<div class="card">
+  <div class="card-body">
+    <div class="empty-state py-5">
+      <div class="empty-state-code"><%= statusCode || 500 %></div>
+      <h1 class="empty-state-title">No se pudo completar la solicitud</h1>
+      <p class="empty-state-text">
+        Ha ocurrido un error inesperado. Revisa la consola del servidor para obtener más detalles.
+        No se muestra información técnica en la interfaz.
+      </p>
+      <a class="btn btn-primary" href="/dashboard">Volver al Dashboard</a>
+    </div>
+  </div>
+</div>

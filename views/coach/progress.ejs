@@ -1,0 +1,337 @@
+<%
+  const weight = metrics.body.weight;
+  const waist = metrics.body.waist;
+  const strength = metrics.strength;
+  const training = metrics.training;
+  const recovery = metrics.recovery;
+  const statusMeta = {
+    up: { label: 'Sube', className: 'bg-green-lt' },
+    flat: { label: 'Estable', className: 'bg-blue-lt' },
+    down: { label: 'Baja', className: 'bg-red-lt' },
+    new: { label: 'Nuevo', className: 'bg-secondary-lt' }
+  };
+%>
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <p class="text-secondary mb-0">
+    Datos de los últimos <%= periodDays %> días. Es la misma información que usa el entrenador.
+  </p>
+  <form class="d-flex align-items-center gap-2" method="get" action="/coach/progress">
+    <label class="form-label mb-0 small text-secondary" for="period">Periodo</label>
+    <select class="form-select form-select-sm w-auto" id="period" name="period">
+      <% periodOptions.forEach((option) => { %>
+        <option value="<%= option.days %>" <%= periodDays === option.days ? 'selected' : '' %>>
+          <%= option.label %>
+        </option>
+      <% }); %>
+    </select>
+    <button class="btn btn-sm btn-outline-secondary" type="submit">Ver</button>
+  </form>
+</div>
+
+<div class="row row-cards mb-3">
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="subheader">Sesiones</div>
+        <div class="h1 mb-0"><%= training.sessionsPeriod %></div>
+        <div class="text-secondary small">
+          <%= fmt.number(
+            training.isResuming ? training.sessionsPerWeekActive : training.sessionsPerWeek
+          ) %>/<%= training.isResuming ? 'semana activa' : 'semana' %> · objetivo
+          <%= training.targetSessionsPerWeek %>
+        </div>
+        <% if (training.isResuming) { %>
+          <span class="badge bg-blue-lt mt-1">Reanudando · <%= training.activeWeeks %> sem. activas</span>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="subheader">Peso</div>
+        <div class="h1 mb-0">
+          <%= weight.latest === null ? '—' : `${fmt.number(weight.latest)} kg` %>
+        </div>
+        <div class="text-secondary small">
+          <% if (weight.trendPctPerWeek !== null) { %>
+            <%= fmt.signedNumber(weight.trendPctPerWeek, '%/semana') %>
+            <% if (weight.changePeriod !== null) { %>
+              · <%= fmt.signedNumber(weight.changePeriod, 'kg') %> en el periodo
+            <% } %>
+          <% } else { %>
+            Sin pesajes suficientes
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="subheader">Cintura</div>
+        <div class="h1 mb-0">
+          <%= waist.latest === null ? '—' : `${fmt.number(waist.latest)} cm` %>
+        </div>
+        <div class="text-secondary small">
+          <% if (waist.changePeriod !== null) { %>
+            <%= fmt.signedNumber(waist.changePeriod, 'cm') %> en el periodo
+          <% } else { %>
+            Sin registros suficientes
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="subheader">Fuerza (e1RM)</div>
+        <div class="h1 mb-0">
+          <span class="text-green"><%= strength.improvedCount %></span>
+          <span class="text-secondary">/</span>
+          <span class="<%= strength.declinedCount > 0 ? 'text-red' : 'text-secondary' %>">
+            <%= strength.declinedCount %>
+          </span>
+        </div>
+        <div class="text-secondary small">
+          suben / bajan · <%= strength.stagnatingCount %> estancado(s)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row row-cards mb-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">Peso y media de 7 días</h3>
+      </div>
+      <div class="card-body">
+        <% if (weight.series.length === 0) { %>
+          <p class="text-secondary mb-0">
+            Sin pesajes en el periodo. Registra el peso desde el
+            <a href="/coach/checkin">check-in</a> o desde
+            <a href="/measurements/new?parameter=weight">Mis constantes</a>.
+          </p>
+        <% } else { %>
+          <div class="chart-container">
+            <canvas id="coach-weight-chart" aria-label="Evolución del peso"></canvas>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">e1RM por ejercicio</h3>
+        <div class="card-actions">
+          <% if (exercises.length > 0) { %>
+            <form method="get" action="/coach/progress" class="d-flex align-items-center gap-2">
+              <input type="hidden" name="period" value="<%= periodDays %>">
+              <select class="form-select form-select-sm" name="exerciseId" aria-label="Ejercicio">
+                <% exercises.forEach((exercise) => { %>
+                  <option value="<%= exercise.id %>" <%= exercise.id === selectedId ? 'selected' : '' %>>
+                    <%= exercise.name %>
+                  </option>
+                <% }); %>
+              </select>
+              <button class="btn btn-sm btn-outline-secondary" type="submit">Ver</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if (!hasExerciseSeries) { %>
+          <p class="text-secondary mb-0">
+            No hay ejercicios con peso suficiente para calcular e1RM. Los ejercicios a peso corporal
+            se siguen midiendo por repeticiones en Estadísticas.
+          </p>
+        <% } else { %>
+          <div class="chart-container">
+            <canvas id="coach-exercise-chart" aria-label="Evolución de la fuerza estimada"></canvas>
+          </div>
+          <div class="text-secondary small mt-2">
+            e1RM = peso × (1 + repeticiones / 30), mejor serie de cada sesión.
+            <% if (selected && selected.isUnilateral) { %>
+              Este ejercicio está marcado como carga por lado: el e1RM es por lado.
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Series de trabajo por grupo muscular</h3>
+        <div class="card-actions text-secondary small">Últimas 8 semanas</div>
+      </div>
+      <div class="card-body">
+        <% if (training.sessionsPeriod === 0) { %>
+          <p class="text-secondary mb-0">Sin entrenamientos en el periodo.</p>
+        <% } else { %>
+          <div class="chart-container" style="height: 320px">
+            <canvas id="coach-muscle-chart" aria-label="Series por grupo muscular"></canvas>
+          </div>
+          <div class="text-secondary small mt-2">
+            Los ejercicios compuestos suman 1 serie al grupo principal y 0,5 a cada secundario.
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row row-cards">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">Ejercicios</h3>
+      </div>
+      <div class="table-responsive">
+        <table class="table card-table table-vcenter">
+          <thead>
+            <tr>
+              <th>Ejercicio</th>
+              <th class="text-end">e1RM</th>
+              <th class="text-end">Cambio</th>
+              <th class="text-end">Series</th>
+              <th>Última</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (strength.exercises.length === 0) { %>
+              <tr>
+                <td colspan="6" class="text-secondary">
+                  Sin ejercicios con peso en el periodo.
+                </td>
+              </tr>
+            <% } %>
+            <% strength.exercises.slice(0, 15).forEach((exercise) => { %>
+              <%
+                const meta = statusMeta[exercise.status] || statusMeta.new;
+                const muscleLabel = (muscleGroups.find((group) => group.key === exercise.muscleGroup) || {}).label;
+              %>
+              <tr>
+                <td>
+                  <div class="fw-semibold"><%= exercise.name %></div>
+                  <div class="text-secondary small"><%= muscleLabel || '—' %></div>
+                </td>
+                <td class="text-end">
+                  <%= fmt.number(exercise.maxE1rmLatest) %> kg<%= exercise.isUnilateral ? '/lado' : '' %>
+                </td>
+                <td class="text-end">
+                  <%= exercise.changePct === null ? '—' : fmt.signedNumber(exercise.changePct, '%') %>
+                </td>
+                <td class="text-end"><%= exercise.setsPeriod %></td>
+                <td><%= fmt.date(exercise.lastSessionDate) %></td>
+                <td>
+                  <span class="badge <%= meta.className %>"><%= meta.label %></span>
+                  <% if (exercise.stagnating && !training.isResuming) { %>
+                    <span class="badge bg-yellow-lt">Estancado</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title">Volumen por grupo</h3>
+      </div>
+      <div class="table-responsive">
+        <table class="table card-table table-vcenter">
+          <thead>
+            <tr>
+              <th>Grupo</th>
+              <th class="text-end">Series/sem</th>
+              <th>Última vez</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% metrics.muscles.perGroup.forEach((group) => { %>
+              <tr>
+                <td><%= group.label %></td>
+                <td class="text-end"><%= fmt.number(group.setsPerWeek) %></td>
+                <td>
+                  <% if (group.lastTrainedDate) { %>
+                    <span title="<%= fmt.date(group.lastTrainedDate) %>">
+                      hace <%= group.daysSince %> d
+                    </span>
+                  <% } else { %>
+                    <span class="text-secondary">—</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Recuperación</h3>
+        <div class="card-actions">
+          <a class="btn btn-sm btn-outline-secondary" href="/coach/checkin">Check-in</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <% if (!recovery.latestCheckin) { %>
+          <p class="text-secondary mb-0">
+            Sin check-ins. El entrenador solo puede valorar la carga, no cómo la estás asimilando.
+          </p>
+        <% } else { %>
+          <%
+            const scores = [
+              { label: 'Sueño', value: recovery.avgSleep, invert: false },
+              { label: 'Energía', value: recovery.avgEnergy, invert: false },
+              { label: 'Estrés', value: recovery.avgStress, invert: true },
+              { label: 'Agujetas', value: recovery.avgSoreness, invert: true }
+            ];
+          %>
+          <% scores.forEach((score) => { %>
+            <div class="mb-2">
+              <div class="d-flex justify-content-between small">
+                <span><%= score.label %></span>
+                <span class="text-secondary">
+                  <%= score.value === null ? '—' : `${fmt.number(score.value)}/5` %>
+                </span>
+              </div>
+              <div class="progress" style="height: 6px">
+                <div
+                  class="progress-bar <%= score.value === null ? 'bg-secondary' : score.invert && score.value >= 3.5 ? 'bg-red' : !score.invert && score.value <= 2.5 ? 'bg-yellow' : 'bg-green' %>"
+                  style="width: <%= score.value === null ? 0 : Math.round((score.value / 5) * 100) %>%"
+                ></div>
+              </div>
+            </div>
+          <% }); %>
+          <div class="text-secondary small mt-2">
+            Medias de los últimos 14 días · último check-in
+            <%= fmt.date(recovery.latestCheckin.checkin_date) %>
+          </div>
+          <% if (recovery.negativeMarkers.length > 0) { %>
+            <div class="alert alert-warning mt-3 mb-0 small">
+              <span class="fw-semibold">Marcadores negativos:</span>
+              <%= recovery.negativeMarkers.map((marker) => marker.label).join(', ') %>.
+            </div>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="coach-charts"><%- chartsJson %></script>

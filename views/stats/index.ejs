@@ -1,0 +1,308 @@
+<% if (summary.total_workout_count === 0) { %>
+  <div class="card">
+    <div class="card-body">
+      <%- include('../partials/empty-state', {
+        icon: 'chart',
+        title: 'Todavía no hay datos para analizar',
+        text: 'Sincroniza tu histórico de Hevy para ver la actividad semanal, el volumen de carga y los récords personales.',
+        actionHref: '/workouts/sync',
+        actionLabel: 'Sincronizar Hevy'
+      }) %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="row row-deck row-cards mb-3">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="subheader mb-2">Sesiones este mes</div>
+          <div class="h1 mb-0"><%= summary.workout_count %></div>
+          <div class="text-secondary small">
+            <%= summary.workout_count === 1 ? 'sesión registrada' : 'sesiones registradas' %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="subheader mb-2">Tiempo entrenado este mes</div>
+          <% if (summary.duration_seconds > 0) { %>
+            <div class="h2 mb-0"><%= fmt.duration(summary.duration_seconds) %></div>
+            <div class="text-secondary small">según la duración registrada por Hevy</div>
+          <% } else { %>
+            <div class="h3 mb-1 text-secondary">Sin datos</div>
+            <div class="text-secondary small">No hay duración registrada este mes.</div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="subheader mb-2">Volumen de carga este mes</div>
+          <% if (summary.volume > 0) { %>
+            <div class="h2 mb-0"><%= fmt.number(summary.volume) %></div>
+            <div class="text-secondary small">kg·rep</div>
+          <% } else { %>
+            <div class="h3 mb-1 text-secondary">Sin datos</div>
+            <div class="text-secondary small">No hay series con peso y repeticiones.</div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="subheader mb-2">Ejercicios con registros</div>
+          <div class="h1 mb-0"><%= summary.exercise_count %></div>
+          <div class="text-secondary small">
+            <%= summary.set_count %> <%= summary.set_count === 1 ? 'serie registrada' : 'series registradas' %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-cards mb-3">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Entrenamientos por semana</h3>
+          <div class="card-actions text-secondary small">Últimas 12 semanas</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="weekly-workouts-chart" aria-label="Entrenamientos por semana"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Volumen de carga por semana</h3>
+          <div class="card-actions text-secondary small">Últimas 12 semanas</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="weekly-volume-chart" aria-label="Volumen de carga por semana"></canvas>
+          </div>
+          <p class="text-secondary small mt-2 mb-0">
+            Fórmula: Σ(peso × repeticiones) de series con peso y repeticiones, excluyendo las
+            marcadas como calentamiento.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title">Resumen mensual</h3>
+      <div class="card-actions text-secondary small">Últimos 12 meses</div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th class="text-end">Sesiones</th>
+            <th class="text-end">Duración</th>
+            <th class="text-end">Volumen de carga</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% monthly.forEach((month) => { %>
+            <tr>
+              <td class="text-nowrap"><%= fmt.month(month.month) %></td>
+              <td class="text-end"><%= month.workoutCount %></td>
+              <td class="text-end">
+                <%= month.durationSeconds > 0 ? fmt.duration(month.durationSeconds) : '—' %>
+              </td>
+              <td class="text-end">
+                <%= month.volume > 0 ? `${fmt.number(month.volume)} kg·rep` : '—' %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title">Evolución por ejercicio</h3>
+    </div>
+    <div class="card-body">
+      <% if (exerciseOptions.length === 0) { %>
+        <%- include('../partials/empty-state', {
+          icon: 'dumbbell',
+          title: 'Sin ejercicios con series',
+          text: 'Todavía no hay series asociadas a ejercicios.'
+        }) %>
+      <% } else { %>
+        <form class="row g-2 align-items-end mb-3" method="get" action="/stats">
+          <div class="col-sm-8 col-lg-5">
+            <label class="form-label" for="exercise-select">Ejercicio</label>
+            <select class="form-select" id="exercise-select" name="exerciseId">
+              <% exerciseOptions.forEach((exercise) => { %>
+                <option
+                  value="<%= exercise.id %>"
+                  <%= selectedExercise && selectedExercise.id === exercise.id ? 'selected' : '' %>
+                >
+                  <%= exercise.name %> (<%= exercise.set_count %> series)
+                </option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="col-sm-4 col-lg-auto">
+            <button class="btn btn-primary" type="submit">Ver evolución</button>
+          </div>
+        </form>
+
+        <% if (selectedExercise) { %>
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span class="badge bg-azure-lt"><%= selectedExercise.name %></span>
+            <span class="text-secondary small">
+              <%= exerciseEvolution.length %>
+              <%= exerciseEvolution.length === 1 ? 'sesión' : 'sesiones' %> ·
+              <%= exerciseTotalSets %> series · Peso máximo:
+              <%= exerciseMaxWeight !== null ? `${fmt.number(exerciseMaxWeight)} kg` : '—' %>
+            </span>
+          </div>
+
+          <% if (exerciseEvolution.length > 0) { %>
+            <div class="chart-container mb-3">
+              <canvas id="exercise-chart" aria-label="Evolución del ejercicio seleccionado"></canvas>
+            </div>
+
+            <p class="text-secondary small mb-3">
+              Peso máximo y repeticiones totales registradas por sesión. El volumen de la tabla
+              aplica la misma fórmula que los gráficos semanales.
+            </p>
+
+            <div class="table-responsive">
+              <table class="table table-vcenter card-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Sesión</th>
+                    <th class="text-end">Series</th>
+                    <th class="text-end">Peso máximo</th>
+                    <th class="text-end">Reps totales</th>
+                    <th class="text-end">Volumen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% exerciseEvolution.slice().reverse().forEach((row) => { %>
+                    <tr>
+                      <td class="text-nowrap text-secondary"><%= fmt.date(row.start_time) %></td>
+                      <td>
+                        <a class="text-reset" href="/workouts/<%= row.workout_id %>">
+                          <%= row.title || 'Sesión sin título' %>
+                        </a>
+                      </td>
+                      <td class="text-end"><%= row.set_count %></td>
+                      <td class="text-end">
+                        <%= row.max_weight !== null && row.max_weight !== undefined
+                          ? `${fmt.number(row.max_weight)} kg`
+                          : '—' %>
+                      </td>
+                      <td class="text-end"><%= row.total_reps %></td>
+                      <td class="text-end">
+                        <%= row.volume > 0 ? `${fmt.number(row.volume)} kg·rep` : '—' %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <%- include('../partials/empty-state', {
+              icon: 'dumbbell',
+              title: 'Sin sesiones para este ejercicio',
+              text: 'No hay series registradas para el ejercicio seleccionado.'
+            }) %>
+          <% } %>
+        <% } %>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Récords personales</h3>
+      <div class="card-actions text-secondary small">Mejores marcas registradas</div>
+    </div>
+    <% if (personalRecords.length === 0) { %>
+      <div class="card-body">
+        <%- include('../partials/empty-state', {
+          icon: 'chart',
+          title: 'Sin récords todavía',
+          text: 'Los récords aparecerán cuando haya series con peso o repeticiones.'
+        }) %>
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+          <thead>
+            <tr>
+              <th>Ejercicio</th>
+              <th>Mejor peso</th>
+              <th>Fecha</th>
+              <th>Mejor serie de repeticiones</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% personalRecords.forEach((record) => { %>
+              <tr>
+                <td class="fw-semibold"><%= record.name %></td>
+                <td>
+                  <% if (record.bestWeight) { %>
+                    <span class="fw-semibold"><%= fmt.number(record.bestWeight.weight) %> kg</span>
+                    <% if (record.bestWeight.reps !== null) { %>
+                      <span class="text-secondary small">× <%= record.bestWeight.reps %> reps</span>
+                    <% } %>
+                  <% } else { %>
+                    <span class="text-secondary">—</span>
+                  <% } %>
+                </td>
+                <td class="text-nowrap text-secondary">
+                  <%= record.bestWeight ? fmt.date(record.bestWeight.date) : '—' %>
+                </td>
+                <td>
+                  <% if (record.bestReps) { %>
+                    <span class="fw-semibold"><%= record.bestReps.reps %> reps</span>
+                    <% if (record.bestReps.weight !== null) { %>
+                      <span class="text-secondary small">· <%= fmt.number(record.bestReps.weight) %> kg</span>
+                    <% } %>
+                  <% } else { %>
+                    <span class="text-secondary">—</span>
+                  <% } %>
+                </td>
+                <td class="text-nowrap text-secondary">
+                  <%= record.bestReps ? fmt.date(record.bestReps.date) : '—' %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-body pt-0">
+        <p class="text-secondary small mb-0">
+          Cada fila compara únicamente series del mismo ejercicio. No se calcula un 1RM estimado ni
+          se comparan ejercicios, variantes o unidades diferentes. Las series de calentamiento
+          también pueden aparecer si son la mejor marca registrada.
+        </p>
+      </div>
+    <% } %>
+  </div>
+<% } %>
+
+<script type="application/json" id="stats-data"><%- statsJson %></script>

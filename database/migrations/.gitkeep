@@ -1,0 +1,2 @@
+# Migraciones SQL posteriores al esquema inicial (001_initial.sql).
+# Se aplican por orden alfabético y se registran en schema_migrations.
